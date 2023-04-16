@@ -1,0 +1,11 @@
+
+## Hibiscus
+
+An API specification for simple RPC clients.
+
+## Motivation
+
+Many [io7m](https://www.io7m.com/) projects implement some form of RPC client.
+The Hibiscus API is an attempt to define some common interface types so that
+unrelated projects nevertheless end up with a consistent look and feel across
+client implementations.
