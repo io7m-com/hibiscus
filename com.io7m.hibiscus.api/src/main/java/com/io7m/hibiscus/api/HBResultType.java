@@ -50,4 +50,19 @@ public sealed interface HBResultType<S, F>
    */
 
   <T> HBResultType<T, F> flatMap(Function<S, HBResultType<T, F>> f);
+
+  /**
+   * If this result is success, return it. Otherwise, construct an exception
+   * using the failure value and throw it.
+   *
+   * @param f   The exception producer
+   * @param <E> The type of thrown exceptions
+   *
+   * @return The success value
+   *
+   * @throws E On failure
+   */
+
+  <E extends Exception> S orElseThrow(Function<F, E> f)
+    throws E;
 }
