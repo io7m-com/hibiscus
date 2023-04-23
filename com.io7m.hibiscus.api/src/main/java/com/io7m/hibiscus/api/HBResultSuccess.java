@@ -56,4 +56,11 @@ public record HBResultSuccess<S, F>(S result)
   {
     return f.apply(this.result);
   }
+
+  @Override
+  public <E extends Exception> S orElseThrow(
+    final Function<F, E> f)
+  {
+    return this.result;
+  }
 }

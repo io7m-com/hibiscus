@@ -28,6 +28,7 @@ import java.util.function.Supplier;
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <E>  The type of events returned by the server
+ * @param <CR> The type of credentials
  */
 
 public interface HBClientType<
@@ -35,7 +36,8 @@ public interface HBClientType<
   C extends HBCommandType,
   RS extends HBResponseType,
   RF extends HBResponseType,
-  E extends HBEventType>
+  E extends HBEventType,
+  CR extends HBCredentialsType>
   extends AutoCloseable
 {
   /**
@@ -65,13 +67,14 @@ public interface HBClientType<
   /**
    * Log in synchronously.
    *
-   * @param <RS1> The response type indicating success
+   * @param credentials The credentials
+   * @param <RS1>       The response type indicating success
    *
    * @return The result
    */
 
   <RS1 extends RS>
-  HBResultType<RS1, RF> login();
+  HBResultType<RS1, RF> login(CR credentials);
 
   /**
    * Execute the given command synchronously.
@@ -101,14 +104,16 @@ public interface HBClientType<
   /**
    * Log in asynchronously.
    *
-   * @param <RS1> The response type indicating success
+   * @param credentials The credentials
+   * @param <RS1>       The response type indicating success
    *
    * @return The operation in progress.
    */
 
-  default <RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>> loginAsync()
+  default <RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>> loginAsync(
+    final CR credentials)
   {
-    return this.runAsync(this::login);
+    return this.runAsync(() -> this.login(credentials));
   }
 
   /**

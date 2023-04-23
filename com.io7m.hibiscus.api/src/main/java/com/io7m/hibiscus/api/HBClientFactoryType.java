@@ -25,6 +25,7 @@ package com.io7m.hibiscus.api;
  * @param <RS> The type of responses returned from the server
  * @param <RF> The type of failure responses returned from the server
  * @param <E>  The type of events received from the server
+ * @param <CR> The type of credentials
  * @param <L>  The type of clients
  */
 
@@ -35,7 +36,8 @@ public interface HBClientFactoryType<
   RS extends HBResponseType,
   RF extends HBResponseType,
   E extends HBEventType,
-  L extends HBClientType<X, C, RS, RF, E>>
+  CR extends HBCredentialsType,
+  L extends HBClientType<X, C, RS, RF, E, CR>>
 {
   /**
    * Open a new client.
