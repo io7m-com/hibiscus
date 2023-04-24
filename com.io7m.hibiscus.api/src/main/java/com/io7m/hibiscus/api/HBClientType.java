@@ -18,6 +18,7 @@ package com.io7m.hibiscus.api;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Flow;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -77,6 +78,28 @@ public interface HBClientType<
   HBResultType<RS1, RF> login(CR credentials);
 
   /**
+   * Log in synchronously, or throw an exception built by {@code exceptions}
+   * based on the failure response.
+   *
+   * @param credentials The credentials
+   * @param exceptions  An exception-producing function.
+   * @param <RS1>       The response type indicating success
+   *
+   * @return The result
+   *
+   * @throws X On errors
+   */
+
+  @SuppressWarnings("unchecked")
+  default <RS1 extends RS> RS1 loginOrElseThrow(
+    final CR credentials,
+    final Function<RF, X> exceptions)
+    throws X
+  {
+    return (RS1) this.login(credentials).orElseThrow(exceptions);
+  }
+
+  /**
    * Execute the given command synchronously.
    *
    * @param command The command
@@ -88,6 +111,30 @@ public interface HBClientType<
 
   <C1 extends C, RS1 extends RS>
   HBResultType<RS1, RF> execute(C1 command);
+
+  /**
+   * Execute the given command synchronously, or throw an exception built by
+   * {@code exceptions} based on the failure response.
+   *
+   * @param command    The command
+   * @param exceptions An exception-producing function.
+   * @param <RS1>      The response type indicating success
+   * @param <C1>       The command type
+   *
+   * @return The result
+   *
+   * @throws X If command execution fails
+   */
+
+  @SuppressWarnings("unchecked")
+  default <C1 extends C, RS1 extends RS> RS1
+  executeOrElseThrow(
+    final C1 command,
+    final Function<RF, X> exceptions)
+    throws X
+  {
+    return (RS1) this.execute(command).orElseThrow(exceptions);
+  }
 
   /**
    * Execute a function asynchronously as the same thread as other client
@@ -117,6 +164,36 @@ public interface HBClientType<
   }
 
   /**
+   * Log in asynchronously. The result of the operation is mapped to an
+   * exception if the command results in a failure response.
+   *
+   * @param credentials The credentials
+   * @param exceptions  An exception-producing function.
+   * @param <RS1>       The response type indicating success
+   * @param <C1>        The command type
+   *
+   * @return The result
+   */
+
+  @SuppressWarnings("unchecked")
+  default <C1 extends C, RS1 extends RS> CompletableFuture<RS1>
+  loginAsyncOrElseThrow(
+    final CR credentials,
+    final Function<RF, X> exceptions)
+  {
+    return this.loginAsync(credentials)
+      .thenCompose(r -> {
+        if (r instanceof HBResultFailure<RS, RF> failure) {
+          return CompletableFuture.failedFuture(exceptions.apply(failure.result()));
+        } else if (r instanceof HBResultSuccess<RS, RF> success) {
+          return CompletableFuture.completedFuture((RS1) success.result());
+        } else {
+          throw new IllegalStateException();
+        }
+      });
+  }
+
+  /**
    * Execute the given command asynchronously.
    *
    * @param command The command
@@ -131,6 +208,36 @@ public interface HBClientType<
     final C1 command)
   {
     return this.runAsync(() -> this.execute(command));
+  }
+
+  /**
+   * Execute the given command asynchronously. The result of the operation is
+   * mapped to an exception if the command results in a failure response.
+   *
+   * @param command    The command
+   * @param exceptions An exception-producing function.
+   * @param <RS1>      The response type indicating success
+   * @param <C1>       The command type
+   *
+   * @return The result
+   */
+
+  @SuppressWarnings("unchecked")
+  default <C1 extends C, RS1 extends RS> CompletableFuture<RS1>
+  executeAsyncOrElseThrow(
+    final C1 command,
+    final Function<RF, X> exceptions)
+  {
+    return this.executeAsync(command)
+      .thenCompose(r -> {
+        if (r instanceof HBResultFailure<RS, RF> failure) {
+          return CompletableFuture.failedFuture(exceptions.apply(failure.result()));
+        } else if (r instanceof HBResultSuccess<RS, RF> success) {
+          return CompletableFuture.completedFuture((RS1) success.result());
+        } else {
+          throw new IllegalStateException();
+        }
+      });
   }
 
   @Override
