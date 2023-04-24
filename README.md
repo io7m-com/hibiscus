@@ -25,3 +25,21 @@ The Hibiscus API is an attempt to define some common interface types so that
 unrelated projects nevertheless end up with a consistent look and feel across
 client implementations.
 
+## Architecture
+
+![architecture](./src/site/resources/arch.png?raw=true)
+
+1. A `Configuration` is passed to a `ClientFactory` to produce a `Client`.
+2. The `Client` sends `Credentials` to the server to log in.
+3. The `Server` sends back `Responses` indicating if the login succeeded or
+   failed.
+4. Assuming success, the `Client` sends `Commands` to the server to perform
+   operations.
+5. The `Server` sends `Responses` to `Commands`.
+6. The `Server` optionally publishes `Events` that can be observed by
+   the `Client`.
+
+A `Response` is encapsulated in a `Result` type that statically indicates
+success or failure. Convenience methods are provided to transform `Result`
+values into exceptions, and the `Result` type is both a functor and a monad.
+
