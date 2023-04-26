@@ -17,136 +17,37 @@
 package com.io7m.hibiscus.api;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Flow;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
- * The base type of RPC client.
+ * The type of asynchronous RPC clients.
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
- * @param <E>  The type of events returned by the server
  * @param <CR> The type of credentials
+ * @param <E>  The type of events
  */
 
-public interface HBClientType<
+public interface HBClientAsynchronousType<
   X extends Exception,
   C extends HBCommandType,
   RS extends HBResponseType,
   RF extends HBResponseType,
   E extends HBEventType,
   CR extends HBCredentialsType>
-  extends AutoCloseable
+  extends HBClientStatusType<E>,
+  HBClientCloseableType<X>
 {
   /**
-   * @return {@code true} if the client is connected
+   * Poll the server for events. The events will be delivered via the
+   * {@link HBClientStatusType#events()} observable stream.
+   *
+   * @return The operating in progress
    */
 
-  boolean isConnected();
-
-  /**
-   * @return A stream of events received from the server
-   */
-
-  Flow.Publisher<E> events();
-
-  /**
-   * @return A stream of state updates for the client
-   */
-
-  Flow.Publisher<HBState> state();
-
-  /**
-   * @return The value of {@link #state()} right now
-   */
-
-  HBState stateNow();
-
-  /**
-   * Log in synchronously.
-   *
-   * @param credentials The credentials
-   * @param <RS1>       The response type indicating success
-   *
-   * @return The result
-   */
-
-  <RS1 extends RS>
-  HBResultType<RS1, RF> login(CR credentials);
-
-  /**
-   * Log in synchronously, or throw an exception built by {@code exceptions}
-   * based on the failure response.
-   *
-   * @param credentials The credentials
-   * @param exceptions  An exception-producing function.
-   * @param <RS1>       The response type indicating success
-   *
-   * @return The result
-   *
-   * @throws X On errors
-   */
-
-  @SuppressWarnings("unchecked")
-  default <RS1 extends RS> RS1 loginOrElseThrow(
-    final CR credentials,
-    final Function<RF, X> exceptions)
-    throws X
-  {
-    return (RS1) this.login(credentials).orElseThrow(exceptions);
-  }
-
-  /**
-   * Execute the given command synchronously.
-   *
-   * @param command The command
-   * @param <RS1>   The response type indicating success
-   * @param <C1>    The command type
-   *
-   * @return The result
-   */
-
-  <C1 extends C, RS1 extends RS>
-  HBResultType<RS1, RF> execute(C1 command);
-
-  /**
-   * Execute the given command synchronously, or throw an exception built by
-   * {@code exceptions} based on the failure response.
-   *
-   * @param command    The command
-   * @param exceptions An exception-producing function.
-   * @param <RS1>      The response type indicating success
-   * @param <C1>       The command type
-   *
-   * @return The result
-   *
-   * @throws X If command execution fails
-   */
-
-  @SuppressWarnings("unchecked")
-  default <C1 extends C, RS1 extends RS> RS1
-  executeOrElseThrow(
-    final C1 command,
-    final Function<RF, X> exceptions)
-    throws X
-  {
-    return (RS1) this.execute(command).orElseThrow(exceptions);
-  }
-
-  /**
-   * Execute a function asynchronously as the same thread as other client
-   * operations.
-   *
-   * @param f   The function
-   * @param <T> The type of results
-   *
-   * @return The result of the function
-   */
-
-  <T> CompletableFuture<T> runAsync(Supplier<T> f);
+  CompletableFuture<Void> pollEvents();
 
   /**
    * Log in asynchronously.
@@ -157,11 +58,8 @@ public interface HBClientType<
    * @return The operation in progress.
    */
 
-  default <RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>> loginAsync(
-    final CR credentials)
-  {
-    return this.runAsync(() -> this.login(credentials));
-  }
+  <RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>> loginAsync(
+    CR credentials);
 
   /**
    * Log in asynchronously. The result of the operation is mapped to an
@@ -203,12 +101,9 @@ public interface HBClientType<
    * @return The operation in progress.
    */
 
-  default <C1 extends C, RS1 extends RS>
+  <C1 extends C, RS1 extends RS>
   CompletableFuture<HBResultType<RS1, RF>> executeAsync(
-    final C1 command)
-  {
-    return this.runAsync(() -> this.execute(command));
-  }
+    C1 command);
 
   /**
    * Execute the given command asynchronously. The result of the operation is
@@ -240,7 +135,11 @@ public interface HBClientType<
       });
   }
 
-  @Override
-  void close()
-    throws X;
+  /**
+   * Disconnect the client.
+   *
+   * @return The operation in progress.
+   */
+
+  CompletableFuture<Void> disconnectAsync();
 }

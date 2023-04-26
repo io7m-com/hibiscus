@@ -30,6 +30,12 @@ public sealed interface HBResultType<S, F>
   permits HBResultFailure, HBResultSuccess
 {
   /**
+   * @return {@code true} if this is a success result
+   */
+
+  boolean isSuccess();
+
+  /**
    * The functor map for result values.
    *
    * @param f   The function to be applied to the value

@@ -44,6 +44,12 @@ public record HBResultFailure<S, F>(F result)
   }
 
   @Override
+  public boolean isSuccess()
+  {
+    return false;
+  }
+
+  @Override
   public <T> HBResultType<T, F> map(
     final Function<S, T> f)
   {
