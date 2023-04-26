@@ -30,6 +30,7 @@ import java.util.List;
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
+ * @param <R>  The type of responses from the server
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <CR> The type of credentials
@@ -37,11 +38,12 @@ import java.util.List;
  */
 
 @ProviderType
-public interface HClientHandlerType<
+public interface HBClientHandlerType<
   X extends Exception,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType>
 {
@@ -72,7 +74,7 @@ public interface HClientHandlerType<
    * @throws InterruptedException On interruption
    */
 
-  HBResultType<HClientNewHandler<X, C, RS, RF, E, CR>, RF>
+  HBResultType<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF>
   onExecuteLogin(CR credentials)
     throws InterruptedException;
 
@@ -80,16 +82,13 @@ public interface HClientHandlerType<
    * Execute the given command synchronously.
    *
    * @param command The command
-   * @param <RS1>   The response type indicating success
-   * @param <C1>    The command type
    *
    * @return The result
    *
    * @throws InterruptedException On interruption
    */
 
-  <C1 extends C, RS1 extends RS>
-  HBResultType<RS1, RF> onExecuteCommand(C1 command)
+  HBResultType<RS, RF> onExecuteCommand(C command)
     throws InterruptedException;
 
   /**

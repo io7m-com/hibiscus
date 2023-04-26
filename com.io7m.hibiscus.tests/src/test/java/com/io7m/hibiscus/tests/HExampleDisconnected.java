@@ -19,8 +19,7 @@ package com.io7m.hibiscus.tests;
 import com.io7m.hibiscus.api.HBResultFailure;
 import com.io7m.hibiscus.api.HBResultSuccess;
 import com.io7m.hibiscus.api.HBResultType;
-import com.io7m.hibiscus.basic.HClientHandlerType;
-import com.io7m.hibiscus.basic.HClientNewHandler;
+import com.io7m.hibiscus.basic.HBClientNewHandler;
 
 import java.io.IOException;
 import java.net.URI;
@@ -33,13 +32,7 @@ import java.util.Objects;
 import static java.net.http.HttpRequest.BodyPublishers.ofString;
 
 public final class HExampleDisconnected
-  implements HClientHandlerType<
-  HExampleException,
-  HExampleCommandType,
-  HExampleResponseType,
-  HExampleResponseError,
-  HExampleEvent,
-  HExampleCredentials>
+  implements HExampleClientHandlerType
 {
   private final HttpClient httpClient;
 
@@ -62,8 +55,18 @@ public final class HExampleDisconnected
     return List.of();
   }
 
+
   @Override
-  public HBResultType<HClientNewHandler<HExampleException, HExampleCommandType, HExampleResponseType, HExampleResponseError, HExampleEvent, HExampleCredentials>, HExampleResponseError>
+  public HBResultType<
+    HBClientNewHandler<
+          HExampleException,
+          HExampleCommandType,
+          HExampleResponseType,
+          HExampleResponseType,
+          HExampleResponseError,
+          HExampleEvent,
+          HExampleCredentials>,
+    HExampleResponseError>
   onExecuteLogin(
     final HExampleCredentials credentials)
     throws InterruptedException
@@ -78,7 +81,9 @@ public final class HExampleDisconnected
 
     final HttpResponse<String> response;
     try {
-      response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+      response = this.httpClient.send(
+        request,
+        HttpResponse.BodyHandlers.ofString());
     } catch (final IOException e) {
       return new HBResultFailure<>(new HExampleResponseError(e.getMessage()));
     }
@@ -87,7 +92,7 @@ public final class HExampleDisconnected
     return switch (responseText) {
       case "OK": {
         yield new HBResultSuccess<>(
-          new HClientNewHandler<>(
+          new HBClientNewHandler<>(
             new HExampleConnected(this.httpClient),
             new HExampleResponseOK("OK")
           )
@@ -102,8 +107,8 @@ public final class HExampleDisconnected
   }
 
   @Override
-  public <C1 extends HExampleCommandType, RS1 extends HExampleResponseType> HBResultType<RS1, HExampleResponseError> onExecuteCommand(
-    final C1 command)
+  public HBResultType<HExampleResponseType, HExampleResponseError> onExecuteCommand(
+    final HExampleCommandType command)
   {
     return new HBResultFailure<>(
       new HExampleResponseError("Not connected!")

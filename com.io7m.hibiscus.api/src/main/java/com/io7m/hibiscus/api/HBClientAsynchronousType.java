@@ -24,6 +24,7 @@ import java.util.function.Function;
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
+ * @param <R>  The type of responses returned from the server
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <CR> The type of credentials
@@ -33,8 +34,9 @@ import java.util.function.Function;
 public interface HBClientAsynchronousType<
   X extends Exception,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType>
   extends HBClientStatusType<E>,
@@ -53,12 +55,11 @@ public interface HBClientAsynchronousType<
    * Log in asynchronously.
    *
    * @param credentials The credentials
-   * @param <RS1>       The response type indicating success
    *
    * @return The operation in progress.
    */
 
-  <RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>> loginAsync(
+  CompletableFuture<HBResultType<RS, RF>> loginAsync(
     CR credentials);
 
   /**
@@ -67,14 +68,12 @@ public interface HBClientAsynchronousType<
    *
    * @param credentials The credentials
    * @param exceptions  An exception-producing function.
-   * @param <RS1>       The response type indicating success
-   * @param <C1>        The command type
    *
    * @return The result
    */
 
   @SuppressWarnings("unchecked")
-  default <C1 extends C, RS1 extends RS> CompletableFuture<RS1>
+  default CompletableFuture<RS>
   loginAsyncOrElseThrow(
     final CR credentials,
     final Function<RF, X> exceptions)
@@ -84,7 +83,7 @@ public interface HBClientAsynchronousType<
         if (r instanceof HBResultFailure<RS, RF> failure) {
           return CompletableFuture.failedFuture(exceptions.apply(failure.result()));
         } else if (r instanceof HBResultSuccess<RS, RF> success) {
-          return CompletableFuture.completedFuture((RS1) success.result());
+          return CompletableFuture.completedFuture(success.result());
         } else {
           throw new IllegalStateException();
         }
@@ -95,15 +94,11 @@ public interface HBClientAsynchronousType<
    * Execute the given command asynchronously.
    *
    * @param command The command
-   * @param <RS1>   The response type indicating success
-   * @param <C1>    The command type
    *
    * @return The operation in progress.
    */
 
-  <C1 extends C, RS1 extends RS>
-  CompletableFuture<HBResultType<RS1, RF>> executeAsync(
-    C1 command);
+  CompletableFuture<HBResultType<RS, RF>> executeAsync(C command);
 
   /**
    * Execute the given command asynchronously. The result of the operation is
@@ -111,16 +106,12 @@ public interface HBClientAsynchronousType<
    *
    * @param command    The command
    * @param exceptions An exception-producing function.
-   * @param <RS1>      The response type indicating success
-   * @param <C1>       The command type
    *
    * @return The result
    */
 
-  @SuppressWarnings("unchecked")
-  default <C1 extends C, RS1 extends RS> CompletableFuture<RS1>
-  executeAsyncOrElseThrow(
-    final C1 command,
+  default CompletableFuture<RS> executeAsyncOrElseThrow(
+    final C command,
     final Function<RF, X> exceptions)
   {
     return this.executeAsync(command)
@@ -128,7 +119,7 @@ public interface HBClientAsynchronousType<
         if (r instanceof HBResultFailure<RS, RF> failure) {
           return CompletableFuture.failedFuture(exceptions.apply(failure.result()));
         } else if (r instanceof HBResultSuccess<RS, RF> success) {
-          return CompletableFuture.completedFuture((RS1) success.result());
+          return CompletableFuture.completedFuture(success.result());
         } else {
           throw new IllegalStateException();
         }

@@ -41,29 +41,31 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
+ * @param <R>  The type of responses returned from the server
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <CR> The type of credentials
  * @param <E>  The type of events
  */
 
-public final class HClientAsynchronous<
+public abstract class HBClientAsynchronousAbstract<
   X extends Exception,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType>
-  implements HBClientAsynchronousType<X, C, RS, RF, E, CR>
+  implements HBClientAsynchronousType<X, C, R, RS, RF, E, CR>
 {
   private static final Logger LOG =
-    LoggerFactory.getLogger(HClientAsynchronous.class);
+    LoggerFactory.getLogger(HBClientAsynchronousAbstract.class);
 
   private final AtomicBoolean closed;
-  private final HBClientSynchronousType<X, C, RS, RF, E, CR> delegate;
+  private final HBClientSynchronousType<X, C, R, RS, RF, E, CR> delegate;
   private final String commandThreadNamePrefix;
   private final ExecutorService commandExecutor;
-  private final LinkedBlockingQueue<OpType<X, C, RS, RF, E, CR>> operationQueue;
+  private final LinkedBlockingQueue<OpType<X, C, R, RS, RF, E, CR>> operationQueue;
 
   /**
    * Construct an asynchronous client.
@@ -73,8 +75,8 @@ public final class HClientAsynchronous<
    * @param inCommandThreadNamePrefix The command thread name prefix
    */
 
-  public HClientAsynchronous(
-    final HBClientSynchronousType<X, C, RS, RF, E, CR> inDelegate,
+  protected HBClientAsynchronousAbstract(
+    final HBClientSynchronousType<X, C, R, RS, RF, E, CR> inDelegate,
     final String inCommandThreadNamePrefix)
   {
     this.delegate =
@@ -108,8 +110,9 @@ public final class HClientAsynchronous<
   private sealed interface OpType
     <X extends Exception,
       C extends HBCommandType,
-      RS extends HBResponseType,
-      RF extends HBResponseType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>
   {
@@ -118,14 +121,14 @@ public final class HClientAsynchronous<
     record Command<
       X extends Exception,
       C extends HBCommandType,
-      RS extends HBResponseType,
-      RS1 extends RS,
-      RF extends HBResponseType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>(
       C command,
-      CompletableFuture<HBResultType<RS1, RF>> future)
-      implements OpType<X, C, RS, RF, E, CR>
+      CompletableFuture<HBResultType<RS, RF>> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
     {
 
     }
@@ -133,12 +136,13 @@ public final class HClientAsynchronous<
     record Disconnect<
       X extends Exception,
       C extends HBCommandType,
-      RS extends HBResponseType,
-      RF extends HBResponseType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>(
       CompletableFuture<Void> future)
-      implements OpType<X, C, RS, RF, E, CR>
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
     {
 
     }
@@ -146,14 +150,14 @@ public final class HClientAsynchronous<
     record Login<
       X extends Exception,
       C extends HBCommandType,
-      RS extends HBResponseType,
-      RS1 extends RS,
-      RF extends HBResponseType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>(
       CR credentials,
-      CompletableFuture<HBResultType<RS1, RF>> future)
-      implements OpType<X, C, RS, RF, E, CR>
+      CompletableFuture<HBResultType<RS, RF>> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
     {
 
     }
@@ -161,12 +165,13 @@ public final class HClientAsynchronous<
     record Close<
       X extends Exception,
       C extends HBCommandType,
-      RS extends HBResponseType,
-      RF extends HBResponseType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>(
       CompletableFuture<Object> future)
-      implements OpType<X, C, RS, RF, E, CR>
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
     {
 
     }
@@ -174,12 +179,13 @@ public final class HClientAsynchronous<
     record PollEvents<
       X extends Exception,
       C extends HBCommandType,
-      RS extends HBResponseType,
-      RF extends HBResponseType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>(
       CompletableFuture<Void> future)
-      implements OpType<X, C, RS, RF, E, CR>
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
     {
 
     }
@@ -188,7 +194,7 @@ public final class HClientAsynchronous<
   private void runCommandProcessing()
   {
     while (!this.closed.get()) {
-      OpType<X, C, RS, RF, E, CR> op = null;
+      OpType<X, C, R, RS, RF, E, CR> op = null;
       try {
         op = this.operationQueue.poll(100L, TimeUnit.MILLISECONDS);
       } catch (final InterruptedException e) {
@@ -199,15 +205,15 @@ public final class HClientAsynchronous<
         continue;
       }
 
-      if (op instanceof final OpType.Login<X, C, RS, ?, RF, E, CR> login) {
+      if (op instanceof final OpType.Login<X, C, R, RS, RF, E, CR> login) {
         this.executeLogin(login);
-      } else if (op instanceof final OpType.Command<X, C, RS, ?, RF, E, CR> command) {
+      } else if (op instanceof final OpType.Command<X, C, R, RS, RF, E, CR> command) {
         this.executeCommand(command);
-      } else if (op instanceof final OpType.Disconnect<X, C, RS, RF, E, CR> disconnect) {
+      } else if (op instanceof final OpType.Disconnect<X, C, R, RS, RF, E, CR> disconnect) {
         this.executeDisconnect(disconnect);
-      } else if (op instanceof OpType.Close<X, C, RS, RF, E, CR>) {
+      } else if (op instanceof OpType.Close<X, C, R, RS, RF, E, CR>) {
         this.executeClose();
-      } else if (op instanceof final OpType.PollEvents<X, C, RS, RF, E, CR> poll) {
+      } else if (op instanceof final OpType.PollEvents<X, C, R, RS, RF, E, CR> poll) {
         this.executePollEvents(poll);
       }
     }
@@ -235,7 +241,7 @@ public final class HClientAsynchronous<
   }
 
   private void executeDisconnect(
-    final OpType.Disconnect<X, C, RS, RF, E, CR> disconnect)
+    final OpType.Disconnect<X, C, R, RS, RF, E, CR> disconnect)
   {
     try {
       this.delegate.disconnect();
@@ -246,7 +252,7 @@ public final class HClientAsynchronous<
   }
 
   private <RS1 extends RS> void executeCommand(
-    final OpType.Command<X, C, RS, RS1, RF, E, CR> command)
+    final OpType.Command<X, C, R, RS, RF, E, CR> command)
   {
     try {
       final var c = command.command;
@@ -257,12 +263,12 @@ public final class HClientAsynchronous<
     }
   }
 
-  private <RS1 extends RS> void executeLogin(
-    final OpType.Login<X, C, RS, RS1, RF, E, CR> login)
+  private void executeLogin(
+    final OpType.Login<X, C, R, RS, RF, E, CR> login)
   {
     try {
       final var c = login.credentials;
-      final var r = this.delegate.<RS1>login(c);
+      final var r = this.delegate.login(c);
       login.future.complete(r);
     } catch (final Throwable e) {
       login.future.completeExceptionally(e);
@@ -270,7 +276,7 @@ public final class HClientAsynchronous<
   }
 
   private void executePollEvents(
-    final OpType.PollEvents<X, C, RS, RF, E, CR> poll)
+    final OpType.PollEvents<X, C, R, RS, RF, E, CR> poll)
   {
     try {
       this.delegate.pollEvents();
@@ -281,31 +287,31 @@ public final class HClientAsynchronous<
   }
 
   @Override
-  public boolean isConnected()
+  public final boolean isConnected()
   {
     return this.delegate.isConnected();
   }
 
   @Override
-  public Flow.Publisher<E> events()
+  public final Flow.Publisher<E> events()
   {
     return this.delegate.events();
   }
 
   @Override
-  public Flow.Publisher<HBState> state()
+  public final Flow.Publisher<HBState> state()
   {
     return this.delegate.state();
   }
 
   @Override
-  public HBState stateNow()
+  public final HBState stateNow()
   {
     return this.delegate.stateNow();
   }
 
   @Override
-  public CompletableFuture<Void> pollEvents()
+  public final CompletableFuture<Void> pollEvents()
   {
     this.checkNotClosed();
 
@@ -315,33 +321,33 @@ public final class HClientAsynchronous<
   }
 
   @Override
-  public <RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>>
+  public final CompletableFuture<HBResultType<RS, RF>>
   loginAsync(
     final CR credentials)
   {
     Objects.requireNonNull(credentials, "credentials");
     this.checkNotClosed();
 
-    final var future = new CompletableFuture<HBResultType<RS1, RF>>();
+    final var future = new CompletableFuture<HBResultType<RS, RF>>();
     this.operationQueue.add(new OpType.Login<>(credentials, future));
     return future;
   }
 
   @Override
-  public <C1 extends C, RS1 extends RS> CompletableFuture<HBResultType<RS1, RF>>
+  public final CompletableFuture<HBResultType<RS, RF>>
   executeAsync(
-    final C1 command)
+    final C command)
   {
     Objects.requireNonNull(command, "command");
     this.checkNotClosed();
 
-    final var future = new CompletableFuture<HBResultType<RS1, RF>>();
+    final var future = new CompletableFuture<HBResultType<RS, RF>>();
     this.operationQueue.add(new OpType.Command<>(command, future));
     return future;
   }
 
   @Override
-  public CompletableFuture<Void> disconnectAsync()
+  public final CompletableFuture<Void> disconnectAsync()
   {
     this.checkNotClosed();
 
@@ -351,7 +357,7 @@ public final class HClientAsynchronous<
   }
 
   @Override
-  public void close()
+  public final void close()
   {
     if (this.closed.compareAndSet(false, true)) {
       final var future =

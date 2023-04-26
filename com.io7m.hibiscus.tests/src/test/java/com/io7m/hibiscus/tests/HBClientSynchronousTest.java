@@ -24,9 +24,9 @@ import com.io7m.hibiscus.api.HBResponseType;
 import com.io7m.hibiscus.api.HBResultFailure;
 import com.io7m.hibiscus.api.HBResultSuccess;
 import com.io7m.hibiscus.api.HBState;
-import com.io7m.hibiscus.basic.HClientHandlerType;
-import com.io7m.hibiscus.basic.HClientNewHandler;
-import com.io7m.hibiscus.basic.HClientSynchronous;
+import com.io7m.hibiscus.basic.HBClientHandlerType;
+import com.io7m.hibiscus.basic.HBClientNewHandler;
+import com.io7m.hibiscus.basic.HBClientSynchronous;
 import com.io7m.quixote.core.QWebServerType;
 import com.io7m.quixote.core.QWebServers;
 import org.junit.jupiter.api.AfterEach;
@@ -36,7 +36,6 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
 import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
@@ -58,7 +57,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public final class HClientSynchronousTest
+public final class HBClientSynchronousTest
 {
   private QWebServerType server;
   private HBResultFailure<HBResponseType, HBResponseType> failureCommand;
@@ -67,21 +66,23 @@ public final class HClientSynchronousTest
   private HandlerType handler1;
   private HBCredentialsType credentials;
   private HBResultFailure<
-    HClientNewHandler<
-      Exception,
-      HBCommandType,
-      HBResponseType,
-      HBResponseType,
-      HBEventType,
-      HBCredentialsType>, HBResponseType> failureLogin;
+    HBClientNewHandler<
+          Exception,
+          HBCommandType,
+          HBResponseType,
+          HBResponseType,
+          HBResponseType,
+          HBEventType,
+          HBCredentialsType>, HBResponseType> failureLogin;
   private HBResultSuccess<
-    HClientNewHandler<
-      Exception,
-      HBCommandType,
-      HBResponseType,
-      HBResponseType,
-      HBEventType,
-      HBCredentialsType>, HBResponseType> successLogin;
+    HBClientNewHandler<
+          Exception,
+          HBCommandType,
+          HBResponseType,
+          HBResponseType,
+          HBResponseType,
+          HBEventType,
+          HBCredentialsType>, HBResponseType> successLogin;
 
   @BeforeEach
   public void setup()
@@ -106,7 +107,7 @@ public final class HClientSynchronousTest
       new HBResultFailure<>(mock(HBResponseType.class));
     this.successLogin =
       new HBResultSuccess<>(
-        new HClientNewHandler<>(
+        new HBClientNewHandler<>(
           this.handler1,
           mock(HBResponseType.class)
         ));
@@ -134,10 +135,10 @@ public final class HClientSynchronousTest
   public void testLoginFails()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -172,10 +173,10 @@ public final class HClientSynchronousTest
   public void testLoginFailsOrElseThrows()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -216,9 +217,9 @@ public final class HClientSynchronousTest
     throws Exception
   {
     final ArrayList<HBState> states;
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -254,10 +255,10 @@ public final class HClientSynchronousTest
   public void testLoginInterrupted()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -293,10 +294,10 @@ public final class HClientSynchronousTest
   public void testCommandFails()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -343,10 +344,10 @@ public final class HClientSynchronousTest
   public void testCommandFailsOrElseThrows()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -401,10 +402,10 @@ public final class HClientSynchronousTest
   public void testCommandSucceeds()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -458,10 +459,10 @@ public final class HClientSynchronousTest
   public void testCommandInterrupted()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -509,7 +510,7 @@ public final class HClientSynchronousTest
   {
     final ArrayList<HBState> states;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       states = new ArrayList<>();
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
@@ -541,11 +542,11 @@ public final class HClientSynchronousTest
   public void testPollEventsSucceeds()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
     final ArrayList<HBEventType> events;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       events = new ArrayList<>();
@@ -604,11 +605,11 @@ public final class HClientSynchronousTest
   public void testPollEventsFails()
     throws Exception
   {
-    final HClientSynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
     final ArrayList<HBEventType> events;
 
-    try (var client = new HClientSynchronous<>(this.handler0)) {
+    try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
       states = new ArrayList<>();
       events = new ArrayList<>();
@@ -648,13 +649,14 @@ public final class HClientSynchronousTest
   }
 
   interface HandlerType extends
-    HClientHandlerType<
-      Exception,
-      HBCommandType,
-      HBResponseType,
-      HBResponseType,
-      HBEventType,
-      HBCredentialsType>
+    HBClientHandlerType<
+          Exception,
+          HBCommandType,
+          HBResponseType,
+          HBResponseType,
+          HBResponseType,
+          HBEventType,
+          HBCredentialsType>
   {
 
   }

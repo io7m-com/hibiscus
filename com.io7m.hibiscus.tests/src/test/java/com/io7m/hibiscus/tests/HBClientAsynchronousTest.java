@@ -25,10 +25,10 @@ import com.io7m.hibiscus.api.HBResponseType;
 import com.io7m.hibiscus.api.HBResultFailure;
 import com.io7m.hibiscus.api.HBResultSuccess;
 import com.io7m.hibiscus.api.HBState;
-import com.io7m.hibiscus.basic.HClientAsynchronous;
-import com.io7m.hibiscus.basic.HClientHandlerType;
-import com.io7m.hibiscus.basic.HClientNewHandler;
-import com.io7m.hibiscus.basic.HClientSynchronous;
+import com.io7m.hibiscus.basic.HBClientAsynchronous;
+import com.io7m.hibiscus.basic.HBClientHandlerType;
+import com.io7m.hibiscus.basic.HBClientNewHandler;
+import com.io7m.hibiscus.basic.HBClientSynchronous;
 import com.io7m.quixote.core.QWebServerType;
 import com.io7m.quixote.core.QWebServers;
 import org.junit.jupiter.api.AfterEach;
@@ -61,30 +61,33 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public final class HClientAsynchronousTest
+public final class HBClientAsynchronousTest
 {
   private QWebServerType server;
   private HBResultFailure<HBResponseType, HBResponseType> failureCommand;
   private HBResultSuccess<HBResponseType, HBResponseType> successCommand;
   private HBResultFailure<
-    HClientNewHandler<
-      Exception,
-      HBCommandType,
-      HBResponseType,
-      HBResponseType,
-      HBEventType,
-      HBCredentialsType>, HBResponseType> failureLogin;
+    HBClientNewHandler<
+          Exception,
+          HBCommandType,
+          HBResponseType,
+          HBResponseType,
+          HBResponseType,
+          HBEventType,
+          HBCredentialsType>, HBResponseType> failureLogin;
   private HBResultSuccess<
-    HClientNewHandler<
-      Exception,
-      HBCommandType,
-      HBResponseType,
-      HBResponseType,
-      HBEventType,
-      HBCredentialsType>, HBResponseType> successLogin;
+    HBClientNewHandler<
+          Exception,
+          HBCommandType,
+          HBResponseType,
+          HBResponseType,
+          HBResponseType,
+          HBEventType,
+          HBCredentialsType>, HBResponseType> successLogin;
   private HBClientSynchronousType<
     Exception,
     HBCommandType,
+    HBResponseType,
     HBResponseType,
     HBResponseType,
     HBEventType,
@@ -113,7 +116,7 @@ public final class HClientAsynchronousTest
     this.credentials =
       mock(HBCredentialsType.class);
     this.delegate =
-      new HClientSynchronous<>(this.handler0);
+      new HBClientSynchronous<>(this.handler0);
 
     this.failureCommand =
       new HBResultFailure<>(mock(HBResponseType.class));
@@ -124,7 +127,7 @@ public final class HClientAsynchronousTest
       new HBResultFailure<>(mock(HBResponseType.class));
     this.successLogin =
       new HBResultSuccess<>(
-        new HClientNewHandler<>(
+        new HBClientNewHandler<>(
           this.handler1,
           mock(HBResponseType.class)
         ));
@@ -147,10 +150,10 @@ public final class HClientAsynchronousTest
   public void testLoginFails()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -186,10 +189,10 @@ public final class HClientAsynchronousTest
   public void testLoginFailsExceptionally()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -226,10 +229,10 @@ public final class HClientAsynchronousTest
   public void testLoginSucceeds()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -266,10 +269,10 @@ public final class HClientAsynchronousTest
   public void testLoginFailsOrElseThrows()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -313,10 +316,10 @@ public final class HClientAsynchronousTest
   public void testLoginSucceedsOrElseThrows()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -351,10 +354,10 @@ public final class HClientAsynchronousTest
   public void testCommandFails()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -400,10 +403,10 @@ public final class HClientAsynchronousTest
   public void testCommandFailsOrElseThrows()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -456,10 +459,10 @@ public final class HClientAsynchronousTest
   public void testCommandSucceeds()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -512,10 +515,10 @@ public final class HClientAsynchronousTest
   public void testCommandSucceedsOrElseThrows()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -568,10 +571,10 @@ public final class HClientAsynchronousTest
   public void testCommandExceptional()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -619,10 +622,10 @@ public final class HClientAsynchronousTest
   public void testCommandNothing()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -648,10 +651,10 @@ public final class HClientAsynchronousTest
   public void testDisconnectSucceeds()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -693,10 +696,10 @@ public final class HClientAsynchronousTest
   public void testDisconnectExceptional()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       client.state()
@@ -746,11 +749,11 @@ public final class HClientAsynchronousTest
   public void testEventPollingSucceeds()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
     final ArrayList<HBEventType> events;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       events = new ArrayList<>();
@@ -814,11 +817,11 @@ public final class HClientAsynchronousTest
   public void testEventPollingFails()
     throws Exception
   {
-    final HClientAsynchronous<?, ?, ?, ?, ?, ?> leakedClient;
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
     final ArrayList<HBState> states;
     final ArrayList<HBEventType> events;
 
-    try (var client = new HClientAsynchronous<>(this.delegate, "t")) {
+    try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
       states = new ArrayList<>();
       events = new ArrayList<>();
@@ -862,13 +865,14 @@ public final class HClientAsynchronousTest
   }
 
   interface HandlerType extends
-    HClientHandlerType<
-      Exception,
-      HBCommandType,
-      HBResponseType,
-      HBResponseType,
-      HBEventType,
-      HBCredentialsType>
+    HBClientHandlerType<
+          Exception,
+          HBCommandType,
+          HBResponseType,
+          HBResponseType,
+          HBResponseType,
+          HBEventType,
+          HBCredentialsType>
   {
 
   }

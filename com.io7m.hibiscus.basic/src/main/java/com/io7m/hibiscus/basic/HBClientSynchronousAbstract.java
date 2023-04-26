@@ -14,7 +14,6 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-
 package com.io7m.hibiscus.basic;
 
 import com.io7m.hibiscus.api.HBClientSynchronousType;
@@ -54,30 +53,32 @@ import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS_SUCCEEDED;
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
+ * @param <R>  The type of responses from the server
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <CR> The type of credentials
  * @param <E>  The type of events
  */
 
-public final class HClientSynchronous<
+public abstract class HBClientSynchronousAbstract<
   X extends Exception,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType>
-  implements HBClientSynchronousType<X, C, RS, RF, E, CR>
+  implements HBClientSynchronousType<X, C, R, RS, RF, E, CR>
 {
   private static final Logger LOG =
-    LoggerFactory.getLogger(HClientSynchronous.class);
+    LoggerFactory.getLogger(HBClientSynchronousAbstract.class);
 
   private final SubmissionPublisher<E> events;
   private final SubmissionPublisher<HBState> state;
   private final AtomicReference<HBState> stateNow;
   private final AtomicBoolean closed;
-  private final HClientHandlerType<X, C, RS, RF, E, CR> disconnectedHandler;
-  private HClientHandlerType<X, C, RS, RF, E, CR> handler;
+  private final HBClientHandlerType<X, C, R, RS, RF, E, CR> disconnectedHandler;
+  private HBClientHandlerType<X, C, R, RS, RF, E, CR> handler;
 
   /**
    * Construct a client.
@@ -86,8 +87,8 @@ public final class HClientSynchronous<
    *                              disconnected state.
    */
 
-  public HClientSynchronous(
-    final HClientHandlerType<X, C, RS, RF, E, CR> inDisconnectedHandler)
+  protected HBClientSynchronousAbstract(
+    final HBClientHandlerType<X, C, R, RS, RF, E, CR> inDisconnectedHandler)
   {
     this.disconnectedHandler =
       Objects.requireNonNull(inDisconnectedHandler, "disconnectedHandler");
@@ -104,31 +105,31 @@ public final class HClientSynchronous<
   }
 
   @Override
-  public boolean isConnected()
+  public final boolean isConnected()
   {
     return this.handler.onIsConnected();
   }
 
   @Override
-  public Flow.Publisher<E> events()
+  public final Flow.Publisher<E> events()
   {
     return this.events;
   }
 
   @Override
-  public Flow.Publisher<HBState> state()
+  public final Flow.Publisher<HBState> state()
   {
     return this.state;
   }
 
   @Override
-  public HBState stateNow()
+  public final HBState stateNow()
   {
     return this.stateNow.get();
   }
 
   @Override
-  public void pollEvents()
+  public final void pollEvents()
     throws InterruptedException
   {
     this.checkNotClosed();
@@ -147,7 +148,7 @@ public final class HClientSynchronous<
   }
 
   @Override
-  public <RS1 extends RS> HBResultType<RS1, RF> login(
+  public final HBResultType<RS, RF> login(
     final CR credentials)
     throws InterruptedException
   {
@@ -157,7 +158,7 @@ public final class HClientSynchronous<
     this.disconnect();
     this.publishState(CLIENT_EXECUTING_LOGIN);
 
-    final HBResultType<HClientNewHandler<X, C, RS, RF, E, CR>, RF> result;
+    final HBResultType<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> result;
     try {
       result = this.handler.onExecuteLogin(credentials);
     } catch (final Exception e) {
@@ -168,14 +169,14 @@ public final class HClientSynchronous<
 
     Objects.requireNonNull(result, "result");
 
-    if (result instanceof final HBResultSuccess<HClientNewHandler<X, C, RS, RF, E, CR>, RF> success) {
+    if (result instanceof final HBResultSuccess<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> success) {
       this.handler = success.result().newHandler();
       this.publishState(CLIENT_EXECUTING_LOGIN_SUCCEEDED);
       this.publishState(CLIENT_CONNECTED);
       LOG.debug("login succeeded");
-      return success.map(h -> (RS1) h.loginResponse());
+      return success.map(HBClientNewHandler::loginResponse);
     }
-    if (result instanceof final HBResultFailure<HClientNewHandler<X, C, RS, RF, E, CR>, RF> failure) {
+    if (result instanceof final HBResultFailure<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> failure) {
       this.publishState(CLIENT_EXECUTING_LOGIN_FAILED);
       LOG.debug("login failed");
       return failure.cast();
@@ -198,8 +199,8 @@ public final class HClientSynchronous<
   }
 
   @Override
-  public <C1 extends C, RS1 extends RS> HBResultType<RS1, RF> execute(
-    final C1 command)
+  public final HBResultType<RS, RF> execute(
+    final C command)
     throws InterruptedException
   {
     Objects.requireNonNull(command, "command");
@@ -226,11 +227,11 @@ public final class HClientSynchronous<
       LOG.debug("command failed");
     }
 
-    return (HBResultType<RS1, RF>) result;
+    return result;
   }
 
   @Override
-  public void disconnect()
+  public final void disconnect()
     throws InterruptedException
   {
     this.checkNotClosed();
@@ -246,7 +247,7 @@ public final class HClientSynchronous<
   }
 
   @Override
-  public void close()
+  public final void close()
   {
     if (this.closed.compareAndSet(false, true)) {
       this.publishState(CLIENT_CLOSED);

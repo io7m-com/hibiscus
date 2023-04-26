@@ -19,8 +19,7 @@ package com.io7m.hibiscus.tests;
 import com.io7m.hibiscus.api.HBResultFailure;
 import com.io7m.hibiscus.api.HBResultSuccess;
 import com.io7m.hibiscus.api.HBResultType;
-import com.io7m.hibiscus.basic.HClientHandlerType;
-import com.io7m.hibiscus.basic.HClientNewHandler;
+import com.io7m.hibiscus.basic.HBClientNewHandler;
 
 import java.io.IOException;
 import java.net.URI;
@@ -33,13 +32,7 @@ import java.util.Objects;
 import static java.net.http.HttpRequest.BodyPublishers.ofString;
 
 public final class HExampleConnected
-  implements HClientHandlerType<
-  HExampleException,
-  HExampleCommandType,
-  HExampleResponseType,
-  HExampleResponseError,
-  HExampleEvent,
-  HExampleCredentials>
+  implements HExampleClientHandlerType
 {
   private final HttpClient httpClient;
 
@@ -63,7 +56,16 @@ public final class HExampleConnected
   }
 
   @Override
-  public HBResultType<HClientNewHandler<HExampleException, HExampleCommandType, HExampleResponseType, HExampleResponseError, HExampleEvent, HExampleCredentials>, HExampleResponseError>
+  public HBResultType<
+    HBClientNewHandler<
+          HExampleException,
+          HExampleCommandType,
+          HExampleResponseType,
+          HExampleResponseType,
+          HExampleResponseError,
+          HExampleEvent,
+          HExampleCredentials>,
+    HExampleResponseError>
   onExecuteLogin(
     final HExampleCredentials credentials)
     throws InterruptedException
@@ -73,12 +75,12 @@ public final class HExampleConnected
   }
 
   @Override
-  public <C1 extends HExampleCommandType, RS1 extends HExampleResponseType> HBResultType<RS1, HExampleResponseError>
+  public HBResultType<HExampleResponseType, HExampleResponseError>
   onExecuteCommand(
-    final C1 command)
+    final HExampleCommandType command)
     throws InterruptedException
   {
-    if (command instanceof HExampleEcho echo) {
+    if (command instanceof final HExampleEcho echo) {
       final var request =
         HttpRequest.newBuilder()
           .uri(URI.create("http://localhost:20000/echo"))
@@ -87,14 +89,14 @@ public final class HExampleConnected
 
       final HttpResponse<String> response;
       try {
-        response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        response = this.httpClient.send(
+          request,
+          HttpResponse.BodyHandlers.ofString());
       } catch (final IOException e) {
         return new HBResultFailure<>(new HExampleResponseError(e.getMessage()));
       }
 
-      return new HBResultSuccess<>(
-        (RS1) new HExampleResponseEcho(response.body())
-      );
+      return new HBResultSuccess<>(new HExampleResponseEcho(response.body()));
     }
 
     return new HBResultFailure<>(

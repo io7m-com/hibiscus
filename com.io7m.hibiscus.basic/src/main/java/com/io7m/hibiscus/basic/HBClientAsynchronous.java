@@ -14,73 +14,48 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+package com.io7m.hibiscus.basic;
 
-package com.io7m.hibiscus.api;
+import com.io7m.hibiscus.api.HBClientSynchronousType;
+import com.io7m.hibiscus.api.HBCommandType;
+import com.io7m.hibiscus.api.HBCredentialsType;
+import com.io7m.hibiscus.api.HBEventType;
+import com.io7m.hibiscus.api.HBResponseType;
 
 /**
- * The core operations exposed by synchronous clients. These operations are
- * application-specific and are the only parts that cannot be provided by a
- * generic implementation.
+ * The basic asynchronous client.
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
- * @param <R>  The type of responses
+ * @param <R>  The type of responses from the server
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <CR> The type of credentials
+ * @param <E>  The type of events
  */
 
-public interface HBClientSynchronousOperationsType<
+public final class HBClientAsynchronous<
   X extends Exception,
   C extends HBCommandType,
   R extends HBResponseType,
   RS extends R,
   RF extends R,
+  E extends HBEventType,
   CR extends HBCredentialsType>
+  extends HBClientAsynchronousAbstract<X, C, R, RS, RF, E, CR>
 {
   /**
-   * Poll the server for events. The events will be delivered via the
-   * {@link HBClientStatusType#events()} observable stream.
+   * Construct an asynchronous client.
    *
-   * @throws InterruptedException On interruption
+   * @param inDelegate                The synchronous client to which operations
+   *                                  will be delegated.
+   * @param inCommandThreadNamePrefix The command thread name prefix
    */
 
-  void pollEvents()
-    throws InterruptedException;
-
-  /**
-   * Log in synchronously.
-   *
-   * @param credentials The credentials
-   *
-   * @return The result
-   *
-   * @throws InterruptedException On interruption
-   */
-
-  HBResultType<RS, RF> login(CR credentials)
-    throws InterruptedException;
-
-  /**
-   * Execute the given command synchronously.
-   *
-   * @param command The command
-   *
-   * @return The result
-   *
-   * @throws InterruptedException On interruption
-   */
-
-  HBResultType<RS, RF> execute(C command)
-    throws InterruptedException;
-
-  /**
-   * Disconnect the client.
-   *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
-   */
-
-  void disconnect()
-    throws X, InterruptedException;
+  public HBClientAsynchronous(
+    final HBClientSynchronousType<X, C, R, RS, RF, E, CR> inDelegate,
+    final String inCommandThreadNamePrefix)
+  {
+    super(inDelegate, inCommandThreadNamePrefix);
+  }
 }

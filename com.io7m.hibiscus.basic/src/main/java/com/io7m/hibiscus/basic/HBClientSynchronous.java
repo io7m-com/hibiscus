@@ -21,43 +21,38 @@ import com.io7m.hibiscus.api.HBCredentialsType;
 import com.io7m.hibiscus.api.HBEventType;
 import com.io7m.hibiscus.api.HBResponseType;
 
-import java.util.Objects;
-
 /**
- * The result of negotiating a client handler.
+ * The basic synchronous client.
  *
- * @param <X>           The type of exceptions that can be raised by the client
- * @param <C>           The type of commands sent by the client
- * @param <RS>          The type of responses returned that indicate successful
- *                      commands
- * @param <RF>          The type of responses returned that indicate failed
- *                      commands
- * @param <CR>          The type of credentials
- * @param <E>           The type of events
- * @param newHandler    The new handler
- * @param loginResponse The login response message
+ * @param <X>  The type of exceptions that can be raised by the client
+ * @param <C>  The type of commands sent by the client
+ * @param <R>  The type of responses from the server
+ * @param <RS> The type of responses returned that indicate successful commands
+ * @param <RF> The type of responses returned that indicate failed commands
+ * @param <CR> The type of credentials
+ * @param <E>  The type of events
  */
 
-public record HClientNewHandler<
+public final class HBClientSynchronous<
   X extends Exception,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
-  CR extends HBCredentialsType>(
-  HClientHandlerType<X, C, RS, RF, E, CR> newHandler,
-  RS loginResponse)
+  CR extends HBCredentialsType>
+  extends HBClientSynchronousAbstract<X, C, R, RS, RF, E, CR>
 {
   /**
-   * The result of negotiating a client handler.
+   * Construct a client.
    *
-   * @param newHandler    The new handler
-   * @param loginResponse The login response message
+   * @param inDisconnectedHandler The handler that will be (re)used in the
+   *                              disconnected state.
    */
 
-  public HClientNewHandler
+  public HBClientSynchronous(
+    final HBClientHandlerType<X, C, R, RS, RF, E, CR> inDisconnectedHandler)
   {
-    Objects.requireNonNull(newHandler, "newHandler");
-    Objects.requireNonNull(loginResponse, "loginResponse");
+    super(inDisconnectedHandler);
   }
 }

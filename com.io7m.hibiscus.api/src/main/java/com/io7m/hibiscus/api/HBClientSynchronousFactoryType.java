@@ -22,7 +22,8 @@ package com.io7m.hibiscus.api;
  * @param <X>  The type of exceptions that can be raised by clients
  * @param <G>  The type of client configuration values
  * @param <C>  The type of commands sent to the server by the client
- * @param <RS> The type of responses returned from the server
+ * @param <R> The type of responses returned from the server
+ * @param <RS> The type of success responses returned from the server
  * @param <RF> The type of failure responses returned from the server
  * @param <E>  The type of events received from the server
  * @param <CR> The type of credentials
@@ -33,11 +34,12 @@ public interface HBClientSynchronousFactoryType<
   X extends Exception,
   G extends HBConfigurationType,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType,
-  L extends HBClientSynchronousType<X, C, RS, RF, E, CR>>
+  L extends HBClientSynchronousType<X, C, R, RS, RF, E, CR>>
 {
   /**
    * Open a new client.

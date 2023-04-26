@@ -23,6 +23,7 @@ import java.util.function.Function;
  *
  * @param <X>  The type of exceptions that can be raised by the client
  * @param <C>  The type of commands sent by the client
+ * @param <R>  The type of responses returned from the server
  * @param <RS> The type of responses returned that indicate successful commands
  * @param <RF> The type of responses returned that indicate failed commands
  * @param <CR> The type of credentials
@@ -32,11 +33,12 @@ import java.util.function.Function;
 public interface HBClientSynchronousType<
   X extends Exception,
   C extends HBCommandType,
-  RS extends HBResponseType,
-  RF extends HBResponseType,
+  R extends HBResponseType,
+  RS extends R,
+  RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType>
-  extends HBClientSynchronousOperationsType<X, C, RS, RF, CR>,
+  extends HBClientSynchronousOperationsType<X, C, R, RS, RF, CR>,
   HBClientStatusType<E>,
   HBClientCloseableType<X>
 {
@@ -46,7 +48,6 @@ public interface HBClientSynchronousType<
    *
    * @param credentials The credentials
    * @param exceptions  An exception-producing function.
-   * @param <RS1>       The response type indicating success
    *
    * @return The result
    *
@@ -54,13 +55,12 @@ public interface HBClientSynchronousType<
    * @throws InterruptedException On interruption
    */
 
-  @SuppressWarnings("unchecked")
-  default <RS1 extends RS> RS1 loginOrElseThrow(
+  default RS loginOrElseThrow(
     final CR credentials,
     final Function<RF, X> exceptions)
     throws X, InterruptedException
   {
-    return (RS1) this.login(credentials).orElseThrow(exceptions);
+    return this.login(credentials).orElseThrow(exceptions);
   }
 
   /**
@@ -69,8 +69,6 @@ public interface HBClientSynchronousType<
    *
    * @param command    The command
    * @param exceptions An exception-producing function.
-   * @param <RS1>      The response type indicating success
-   * @param <C1>       The command type
    *
    * @return The result
    *
@@ -78,13 +76,11 @@ public interface HBClientSynchronousType<
    * @throws InterruptedException On interruption
    */
 
-  @SuppressWarnings("unchecked")
-  default <C1 extends C, RS1 extends RS> RS1
-  executeOrElseThrow(
-    final C1 command,
+  default RS executeOrElseThrow(
+    final C command,
     final Function<RF, X> exceptions)
     throws X, InterruptedException
   {
-    return (RS1) this.execute(command).orElseThrow(exceptions);
+    return this.execute(command).orElseThrow(exceptions);
   }
 }
