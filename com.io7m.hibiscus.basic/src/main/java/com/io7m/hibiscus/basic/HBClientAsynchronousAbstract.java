@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Flow;
@@ -107,88 +108,10 @@ public abstract class HBClientAsynchronousAbstract<
     this.commandExecutor.execute(this::runCommandProcessing);
   }
 
-  private sealed interface OpType
-    <X extends Exception,
-      C extends HBCommandType,
-      R extends HBResponseType,
-      RS extends R,
-      RF extends R,
-      E extends HBEventType,
-      CR extends HBCredentialsType>
+  @Override
+  public final boolean isClosed()
   {
-    CompletableFuture<?> future();
-
-    record Command<
-      X extends Exception,
-      C extends HBCommandType,
-      R extends HBResponseType,
-      RS extends R,
-      RF extends R,
-      E extends HBEventType,
-      CR extends HBCredentialsType>(
-      C command,
-      CompletableFuture<HBResultType<RS, RF>> future)
-      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
-    {
-
-    }
-
-    record Disconnect<
-      X extends Exception,
-      C extends HBCommandType,
-      R extends HBResponseType,
-      RS extends R,
-      RF extends R,
-      E extends HBEventType,
-      CR extends HBCredentialsType>(
-      CompletableFuture<Void> future)
-      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
-    {
-
-    }
-
-    record Login<
-      X extends Exception,
-      C extends HBCommandType,
-      R extends HBResponseType,
-      RS extends R,
-      RF extends R,
-      E extends HBEventType,
-      CR extends HBCredentialsType>(
-      CR credentials,
-      CompletableFuture<HBResultType<RS, RF>> future)
-      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
-    {
-
-    }
-
-    record Close<
-      X extends Exception,
-      C extends HBCommandType,
-      R extends HBResponseType,
-      RS extends R,
-      RF extends R,
-      E extends HBEventType,
-      CR extends HBCredentialsType>(
-      CompletableFuture<Object> future)
-      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
-    {
-
-    }
-
-    record PollEvents<
-      X extends Exception,
-      C extends HBCommandType,
-      R extends HBResponseType,
-      RS extends R,
-      RF extends R,
-      E extends HBEventType,
-      CR extends HBCredentialsType>(
-      CompletableFuture<Void> future)
-      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
-    {
-
-    }
+    return this.delegate.isClosed();
   }
 
   private void runCommandProcessing()
@@ -211,15 +134,16 @@ public abstract class HBClientAsynchronousAbstract<
         this.executeCommand(command);
       } else if (op instanceof final OpType.Disconnect<X, C, R, RS, RF, E, CR> disconnect) {
         this.executeDisconnect(disconnect);
-      } else if (op instanceof OpType.Close<X, C, R, RS, RF, E, CR>) {
-        this.executeClose();
+      } else if (op instanceof final OpType.Close<X, C, R, RS, RF, E, CR> close) {
+        this.executeClose(close);
       } else if (op instanceof final OpType.PollEvents<X, C, R, RS, RF, E, CR> poll) {
         this.executePollEvents(poll);
       }
     }
   }
 
-  private void executeClose()
+  private void executeClose(
+    final OpType.Close<X, C, R, RS, RF, E, CR> close)
   {
     /*
      * Cancel all pending operations in the queue. The guard on the "closed"
@@ -229,11 +153,17 @@ public abstract class HBClientAsynchronousAbstract<
      */
 
     try {
-      this.operationQueue.forEach(op -> op.future().cancel(true));
+      this.operationQueue.forEach(op -> {
+        if (!Objects.equals(close.future, op.future())) {
+          op.future().cancel(true);
+        }
+      });
       try {
         this.delegate.close();
       } catch (final Exception e) {
         LOG.debug("close: ", e);
+      } finally {
+        close.future.complete(null);
       }
     } finally {
       this.commandExecutor.shutdown();
@@ -363,6 +293,13 @@ public abstract class HBClientAsynchronousAbstract<
       final var future =
         CompletableFuture.completedFuture(null);
       this.operationQueue.add(new OpType.Close<>(future));
+      try {
+        future.get();
+      } catch (final InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (final ExecutionException e) {
+        // Nothing we can do about it.
+      }
     }
   }
 
@@ -370,6 +307,90 @@ public abstract class HBClientAsynchronousAbstract<
   {
     if (this.closed.get()) {
       throw new IllegalStateException("Client is closed!");
+    }
+  }
+
+  private sealed interface OpType
+    <X extends Exception,
+      C extends HBCommandType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
+      E extends HBEventType,
+      CR extends HBCredentialsType>
+  {
+    CompletableFuture<?> future();
+
+    record Command<
+      X extends Exception,
+      C extends HBCommandType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
+      E extends HBEventType,
+      CR extends HBCredentialsType>(
+      C command,
+      CompletableFuture<HBResultType<RS, RF>> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
+    {
+
+    }
+
+    record Disconnect<
+      X extends Exception,
+      C extends HBCommandType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
+      E extends HBEventType,
+      CR extends HBCredentialsType>(
+      CompletableFuture<Void> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
+    {
+
+    }
+
+    record Login<
+      X extends Exception,
+      C extends HBCommandType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
+      E extends HBEventType,
+      CR extends HBCredentialsType>(
+      CR credentials,
+      CompletableFuture<HBResultType<RS, RF>> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
+    {
+
+    }
+
+    record Close<
+      X extends Exception,
+      C extends HBCommandType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
+      E extends HBEventType,
+      CR extends HBCredentialsType>(
+      CompletableFuture<Object> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
+    {
+
+    }
+
+    record PollEvents<
+      X extends Exception,
+      C extends HBCommandType,
+      R extends HBResponseType,
+      RS extends R,
+      RF extends R,
+      E extends HBEventType,
+      CR extends HBCredentialsType>(
+      CompletableFuture<Void> future)
+      implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
+    {
+
     }
   }
 }

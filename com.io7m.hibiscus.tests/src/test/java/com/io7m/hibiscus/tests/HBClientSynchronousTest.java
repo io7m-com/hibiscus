@@ -160,6 +160,7 @@ public final class HBClientSynchronousTest
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -203,6 +204,7 @@ public final class HBClientSynchronousTest
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -242,6 +244,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -281,6 +284,7 @@ public final class HBClientSynchronousTest
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -331,6 +335,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -389,6 +394,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -439,6 +445,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
 
@@ -495,6 +502,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -592,6 +600,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_POLLING_EVENTS, states.remove(0));
     assertEquals(CLIENT_POLLING_EVENTS_SUCCEEDED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -645,6 +654,7 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_POLLING_EVENTS, states.remove(0));
     assertEquals(CLIENT_POLLING_EVENTS_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }

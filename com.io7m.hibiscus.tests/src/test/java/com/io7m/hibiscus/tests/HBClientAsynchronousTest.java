@@ -174,10 +174,19 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+  }
+
+  private static void sleep()
+    throws InterruptedException
+  {
+    Thread.sleep(1L);
   }
 
   /**
@@ -214,7 +223,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
@@ -253,7 +265,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_CONNECTED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -301,7 +316,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
@@ -338,7 +356,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_CONNECTED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -385,7 +406,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -441,7 +465,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -490,7 +517,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -546,7 +576,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -604,12 +637,17 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
+
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
 
@@ -634,11 +672,12 @@ public final class HBClientAsynchronousTest
 
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
       assertFalse(client.isConnected());
-
-      Thread.sleep(1_000L);
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
 
@@ -680,7 +719,10 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -729,10 +771,12 @@ public final class HBClientAsynchronousTest
 
       assertInstanceOf(NullPointerException.class, result1.get());
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
-      Thread.sleep(20L);
     }
 
-    Thread.sleep(20L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -793,7 +837,10 @@ public final class HBClientAsynchronousTest
       );
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -851,7 +898,10 @@ public final class HBClientAsynchronousTest
       assertEquals(List.of(), events);
     }
 
-    Thread.sleep(10L);
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));

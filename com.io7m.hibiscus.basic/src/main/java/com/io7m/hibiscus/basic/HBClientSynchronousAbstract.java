@@ -93,15 +93,21 @@ public abstract class HBClientSynchronousAbstract<
     this.disconnectedHandler =
       Objects.requireNonNull(inDisconnectedHandler, "disconnectedHandler");
     this.events =
-      new SubmissionPublisher<>();
+      new SubmissionPublisher<>(new HBDirectExecutor(), Flow.defaultBufferSize());
     this.state =
-      new SubmissionPublisher<>();
+      new SubmissionPublisher<>(new HBDirectExecutor(), Flow.defaultBufferSize());
     this.stateNow =
-      new AtomicReference<>(HBState.CLIENT_DISCONNECTED);
+      new AtomicReference<>(CLIENT_DISCONNECTED);
     this.closed =
       new AtomicBoolean(false);
     this.handler =
       this.disconnectedHandler;
+  }
+
+  @Override
+  public final boolean isClosed()
+  {
+    return this.closed.get();
   }
 
   @Override
@@ -194,6 +200,16 @@ public abstract class HBClientSynchronousAbstract<
   private void publishState(
     final HBState newState)
   {
+    if (newState == CLIENT_CLOSED) {
+      this.stateNow.set(newState);
+      this.state.submit(newState);
+      return;
+    }
+
+    if (this.closed.get()) {
+      return;
+    }
+
     this.stateNow.set(newState);
     this.state.submit(newState);
   }
