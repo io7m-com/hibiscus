@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -68,22 +69,22 @@ public final class HBClientAsynchronousTest
   private HBResultSuccess<HBResponseType, HBResponseType> successCommand;
   private HBResultFailure<
     HBClientNewHandler<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>, HBResponseType> failureLogin;
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>, HBResponseType> failureLogin;
   private HBResultSuccess<
     HBClientNewHandler<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>, HBResponseType> successLogin;
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>, HBResponseType> successLogin;
   private HBClientSynchronousType<
     Exception,
     HBCommandType,
@@ -151,11 +152,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -190,11 +191,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -230,11 +231,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -270,11 +271,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -288,8 +289,8 @@ public final class HBClientAsynchronousTest
         assertThrows(
           ExecutionException.class,
           () -> client.loginAsyncOrElseThrow(
-            this.credentials,
-            HExampleException::new)
+              this.credentials,
+              HExampleException::new)
             .get()
         );
 
@@ -317,11 +318,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -355,11 +356,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -404,11 +405,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -460,11 +461,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -516,11 +517,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -572,11 +573,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -623,11 +624,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -652,11 +653,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -697,11 +698,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -740,7 +741,8 @@ public final class HBClientAsynchronousTest
   }
 
   /**
-   * If a client signals that polling events succeeded, the events are delivered.
+   * If a client signals that polling events succeeded, the events are
+   * delivered.
    *
    * @throws Exception On errors
    */
@@ -750,13 +752,13 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
-    final ArrayList<HBEventType> events;
+    final List<HBState> states;
+    final List<HBEventType> events;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
-      events = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
+      events = Collections.synchronizedList(new ArrayList<>());
       client.state().subscribe(new HPerpetualSubscriber<>(states::add));
       client.events().subscribe(new HPerpetualSubscriber<>(events::add));
 
@@ -808,7 +810,8 @@ public final class HBClientAsynchronousTest
   }
 
   /**
-   * If a client signals that polling events failed, the events are not delivered.
+   * If a client signals that polling events failed, the events are not
+   * delivered.
    *
    * @throws Exception On errors
    */
@@ -818,13 +821,13 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
-    final ArrayList<HBEventType> events;
+    final List<HBState> states;
+    final List<HBEventType> events;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
-      events = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
+      events = Collections.synchronizedList(new ArrayList<>());
       client.state().subscribe(new HPerpetualSubscriber<>(states::add));
       client.events().subscribe(new HPerpetualSubscriber<>(events::add));
 
@@ -866,13 +869,13 @@ public final class HBClientAsynchronousTest
 
   interface HandlerType extends
     HBClientHandlerType<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>
   {
 
   }

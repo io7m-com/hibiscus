@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
@@ -67,22 +68,22 @@ public final class HBClientSynchronousTest
   private HBCredentialsType credentials;
   private HBResultFailure<
     HBClientNewHandler<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>, HBResponseType> failureLogin;
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>, HBResponseType> failureLogin;
   private HBResultSuccess<
     HBClientNewHandler<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>, HBResponseType> successLogin;
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>, HBResponseType> successLogin;
 
   @BeforeEach
   public void setup()
@@ -136,11 +137,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -174,11 +175,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -216,12 +217,12 @@ public final class HBClientSynchronousTest
   public void testLoginSucceeds()
     throws Exception
   {
-    final ArrayList<HBState> states;
+    final List<HBState> states;
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -256,11 +257,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -295,11 +296,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -345,11 +346,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -403,11 +404,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -460,11 +461,11 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -508,10 +509,10 @@ public final class HBClientSynchronousTest
   public void testDisconnectInterrupted()
     throws Exception
   {
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -543,13 +544,13 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
-    final ArrayList<HBEventType> events;
+    final List<HBState> states;
+    final List<HBEventType> events;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
-      events = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
+      events = Collections.synchronizedList(new ArrayList<>());
 
       client.state().subscribe(new HPerpetualSubscriber<>(states::add));
       client.events().subscribe(new HPerpetualSubscriber<>(events::add));
@@ -606,13 +607,13 @@ public final class HBClientSynchronousTest
     throws Exception
   {
     final HBClientSynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
-    final ArrayList<HBEventType> events;
+    final List<HBState> states;
+    final List<HBEventType> events;
 
     try (var client = new HBClientSynchronous<>(this.handler0)) {
       leakedClient = client;
-      states = new ArrayList<>();
-      events = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
+      events = Collections.synchronizedList(new ArrayList<>());
 
       client.state().subscribe(new HPerpetualSubscriber<>(states::add));
       client.events().subscribe(new HPerpetualSubscriber<>(events::add));
@@ -626,7 +627,7 @@ public final class HBClientSynchronousTest
 
       doThrow(new NullPointerException("Null!"))
         .when(this.handler1)
-          .onPollEvents();
+        .onPollEvents();
 
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
       assertFalse(client.isConnected());
@@ -650,13 +651,13 @@ public final class HBClientSynchronousTest
 
   interface HandlerType extends
     HBClientHandlerType<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>
   {
 
   }
