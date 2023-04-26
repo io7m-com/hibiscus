@@ -17,21 +17,20 @@
 package com.io7m.hibiscus.api;
 
 /**
- * A factory of clients.
+ * A factory of synchronous clients.
  *
  * @param <X>  The type of exceptions that can be raised by clients
  * @param <G>  The type of client configuration values
  * @param <C>  The type of commands sent to the server by the client
- * @param <R>  The type of responses returned from the server
+ * @param <R> The type of responses returned from the server
  * @param <RS> The type of success responses returned from the server
  * @param <RF> The type of failure responses returned from the server
  * @param <E>  The type of events received from the server
  * @param <CR> The type of credentials
- * @param <LA> The type of asynchronous clients
- * @param <LS> The type of synchronous clients
+ * @param <L>  The type of clients
  */
 
-public interface HBClientFactoryType<
+public interface HBClientSynchronousFactoryType<
   X extends Exception,
   G extends HBConfigurationType,
   C extends HBCommandType,
@@ -40,10 +39,15 @@ public interface HBClientFactoryType<
   RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType,
-  LA extends HBClientAsynchronousType<X, C, R, RS, RF, E, CR>,
-  LS extends HBClientSynchronousType<X, C, R, RS, RF, E, CR>>
-  extends HBClientAsynchronousFactoryType<X, G, C, R, RS, RF, E, CR, LA>,
-  HBClientSynchronousFactoryType<X, G, C, R, RS, RF, E, CR, LS>
+  L extends HBClientSynchronousType<X, C, R, RS, RF, E, CR>>
 {
+  /**
+   * Open a new client.
+   *
+   * @param configuration The client configuration
+   *
+   * @return A new client
+   */
 
+  L openSynchronousClient(G configuration);
 }

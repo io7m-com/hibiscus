@@ -26,41 +26,71 @@ public enum HBState
    * The client is authenticating with the server.
    */
 
-  CLIENT_AUTHENTICATING,
+  CLIENT_EXECUTING_LOGIN,
 
   /**
    * The client failed to authenticate with the server.
    */
 
-  CLIENT_AUTHENTICATION_FAILED,
+  CLIENT_EXECUTING_LOGIN_FAILED,
 
   /**
-   * The client connected.
+   * The client successfully authenticated with the server.
+   */
+
+  CLIENT_EXECUTING_LOGIN_SUCCEEDED,
+
+  /**
+   * The client is connected.
    */
 
   CLIENT_CONNECTED,
 
   /**
-   * The client disconnected.
+   * The client is disconnected.
    */
 
   CLIENT_DISCONNECTED,
 
   /**
-   * The client is sending a command.
+   * The client is executing a command.
    */
 
-  CLIENT_SENDING_COMMAND,
+  CLIENT_EXECUTING_COMMAND,
 
   /**
-   * The client is receiving data.
+   * The client failed to execute a command.
    */
 
-  CLIENT_RECEIVING_DATA,
+  CLIENT_EXECUTING_COMMAND_FAILED,
 
   /**
-   * The client is idle.
+   * The client successfully executed a command.
    */
 
-  CLIENT_IDLE
+  CLIENT_EXECUTING_COMMAND_SUCCEEDED,
+
+  /**
+   * The client is polling the server for events.
+   */
+
+  CLIENT_POLLING_EVENTS,
+
+  /**
+   * The client failed to poll the server for events.
+   */
+
+  CLIENT_POLLING_EVENTS_FAILED,
+
+  /**
+   * The client successfully polled the server for events.
+   */
+
+  CLIENT_POLLING_EVENTS_SUCCEEDED,
+
+  /**
+   * The client has been closed.
+   */
+
+  CLIENT_CLOSED
 }

@@ -27,3 +27,33 @@ client implementations.
 A `Response` is encapsulated in a `Result` type that statically indicates
 success or failure. Convenience methods are provided to transform `Result`
 values into exceptions, and the `Result` type is both a functor and a monad.
+
+## State
+
+Clients conform to a simple state machine:
+
+![state](./src/site/resources/state.png?raw=true)
+
+1. Clients begin in the `DISCONNECTED` state.
+2. A `Login` operation moves the client into the `EXECUTING_LOGIN` state.
+3. If the login succeeds, the client moves to the `CONNECTED` state after
+   passing through the `EXECUTING_LOGIN_SUCCEEDED` state.
+4. If the login fails, the client moves to the `DISCONNECTED` state after
+   passing through the `EXECUTING_LOGIN_FAILED` state.
+
+In the `CONNECTED` state, the client can:
+
+* Disconnect, moving to the `DISCONNECTED` state.
+* Attempt to execute a command, moving to the `EXECUTING_COMMAND` state.
+* Attempt to poll for events, moving to the `POLLING_EVENTS` state.
+
+In the `EXECUTING_COMMAND` state, a command can either succeed or fail. This
+moves the client back to the `CONNECTED` state after passing through either of
+the `EXECUTING_COMMAND_FAILED` or `EXECUTING_COMMAND_SUCCEEDED` states as
+appropriate.
+
+In the `POLLING_EVENTS` state, a command can either succeed or fail. This
+moves the client back to the `CONNECTED` state after passing through either of
+the `POLLING_EVENTS_FAILED` or `POLLING_EVENTS_SUCCEEDED` states as
+appropriate.
+

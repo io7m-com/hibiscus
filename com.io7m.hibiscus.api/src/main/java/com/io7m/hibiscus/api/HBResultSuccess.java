@@ -29,6 +29,12 @@ import java.util.function.Function;
 public record HBResultSuccess<S, F>(S result)
   implements HBResultType<S, F>
 {
+  @Override
+  public boolean isSuccess()
+  {
+    return true;
+  }
+
   /**
    * Safely cast this value.
    *
