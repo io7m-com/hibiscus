@@ -76,8 +76,10 @@ public abstract class HBClientSynchronousAbstract<
   private final SubmissionPublisher<E> events;
   private final SubmissionPublisher<HBState> state;
   private final AtomicReference<HBState> stateNow;
-  private final AtomicBoolean closed;
+  private final AtomicBoolean closedExternal;
+  private final AtomicBoolean closedInternal;
   private final HBClientHandlerType<X, C, R, RS, RF, E, CR> disconnectedHandler;
+  private final HBDirectExecutor executor;
   private HBClientHandlerType<X, C, R, RS, RF, E, CR> handler;
 
   /**
@@ -92,13 +94,18 @@ public abstract class HBClientSynchronousAbstract<
   {
     this.disconnectedHandler =
       Objects.requireNonNull(inDisconnectedHandler, "disconnectedHandler");
+
+    this.executor =
+      new HBDirectExecutor();
     this.events =
-      new SubmissionPublisher<>(new HBDirectExecutor(), Flow.defaultBufferSize());
+      new SubmissionPublisher<>(this.executor, Flow.defaultBufferSize());
     this.state =
-      new SubmissionPublisher<>(new HBDirectExecutor(), Flow.defaultBufferSize());
+      new SubmissionPublisher<>(this.executor, Flow.defaultBufferSize());
     this.stateNow =
       new AtomicReference<>(CLIENT_DISCONNECTED);
-    this.closed =
+    this.closedExternal =
+      new AtomicBoolean(false);
+    this.closedInternal =
       new AtomicBoolean(false);
     this.handler =
       this.disconnectedHandler;
@@ -107,7 +114,7 @@ public abstract class HBClientSynchronousAbstract<
   @Override
   public final boolean isClosed()
   {
-    return this.closed.get();
+    return this.closedExternal.get();
   }
 
   @Override
@@ -192,7 +199,7 @@ public abstract class HBClientSynchronousAbstract<
 
   private void checkNotClosed()
   {
-    if (this.closed.get()) {
+    if (this.closedExternal.get()) {
       throw new IllegalStateException("Client is closed!");
     }
   }
@@ -207,7 +214,7 @@ public abstract class HBClientSynchronousAbstract<
       return;
     }
 
-    if (this.closed.get()) {
+    if (this.closedExternal.get()) {
       return;
     }
 
@@ -275,17 +282,28 @@ public abstract class HBClientSynchronousAbstract<
   @Override
   public final void close()
   {
-    if (this.closed.compareAndSet(false, true)) {
-      if (LOG.isTraceEnabled()) {
-        LOG.trace("close");
-      }
+    /*
+     * We track an "internal" and "external" closed state flag because we
+     * want to use the internal flag to prevent multiple close attempts, but
+     * we don't want to advertise the "closed" state externally until all
+     * resources have actually been closed.
+     */
 
-      this.publishState(CLIENT_CLOSED);
-
+    if (this.closedInternal.compareAndSet(false, true)) {
       try {
-        this.state.close();
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("close");
+        }
+
+        this.publishState(CLIENT_CLOSED);
+
+        try {
+          this.state.close();
+        } finally {
+          this.events.close();
+        }
       } finally {
-        this.events.close();
+        this.closedExternal.set(true);
       }
     }
   }

@@ -167,6 +167,12 @@ public abstract class HBClientAsynchronousAbstract<
       }
     } finally {
       this.commandExecutor.shutdown();
+
+      try {
+        this.commandExecutor.awaitTermination(1L, TimeUnit.SECONDS);
+      } catch (final InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     }
   }
 
