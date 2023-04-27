@@ -202,11 +202,22 @@ public final class HBClientAsynchronousTest
   {
     LOG.debug("{}: waiting for close", this.testInfo.getDisplayName());
 
-    while (!leakedClient.isClosed()) {
+    for (int index = 0; index < 1000_000_00; ++index) {
+      LOG.debug(
+        "{}: still waiting ({})",
+        this.testInfo.getDisplayName(),
+        leakedClient.stateNow()
+      );
+
+      if (leakedClient.isClosed()) {
+        break;
+      }
       sleep();
     }
 
-    LOG.debug("{}: waited for close successfully", this.testInfo.getDisplayName());
+    LOG.debug(
+      "{}: waited for close successfully",
+      this.testInfo.getDisplayName());
   }
 
   private static void sleep()

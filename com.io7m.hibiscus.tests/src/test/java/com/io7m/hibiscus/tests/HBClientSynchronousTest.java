@@ -189,13 +189,11 @@ public final class HBClientSynchronousTest
     LOG.debug("{}: waiting for close", this.testInfo.getDisplayName());
 
     for (int index = 0; index < 1000_000_00; ++index) {
-      if (index % 100 == 0) {
-        LOG.debug(
-          "{}: still waiting ({})",
-          this.testInfo.getDisplayName(),
-          leakedClient.stateNow()
-        );
-      }
+      LOG.debug(
+        "{}: still waiting ({})",
+        this.testInfo.getDisplayName(),
+        leakedClient.stateNow()
+      );
 
       if (leakedClient.isClosed()) {
         break;
