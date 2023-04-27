@@ -5,7 +5,7 @@
   <appender name="STDERR"
             class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>hibiscus: %logger{128}: %level: %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} hibiscus: %logger{128}: %level: %msg%n</pattern>
     </encoder>
     <target>System.out</target>
   </appender>
