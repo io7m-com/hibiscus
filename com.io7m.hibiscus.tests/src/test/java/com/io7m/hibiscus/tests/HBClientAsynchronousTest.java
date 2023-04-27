@@ -34,10 +34,16 @@ import com.io7m.quixote.core.QWebServers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
 import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
@@ -61,29 +67,33 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Timeout(value = 5L, unit = TimeUnit.SECONDS)
 public final class HBClientAsynchronousTest
 {
+  private static final Logger LOG =
+    LoggerFactory.getLogger(HBClientAsynchronousTest.class);
+
   private QWebServerType server;
   private HBResultFailure<HBResponseType, HBResponseType> failureCommand;
   private HBResultSuccess<HBResponseType, HBResponseType> successCommand;
   private HBResultFailure<
     HBClientNewHandler<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>, HBResponseType> failureLogin;
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>, HBResponseType> failureLogin;
   private HBResultSuccess<
     HBClientNewHandler<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>, HBResponseType> successLogin;
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>, HBResponseType> successLogin;
   private HBClientSynchronousType<
     Exception,
     HBCommandType,
@@ -95,11 +105,16 @@ public final class HBClientAsynchronousTest
   private HBCredentialsType credentials;
   private HandlerType handler0;
   private HandlerType handler1;
+  private TestInfo testInfo;
 
   @BeforeEach
-  public void setup()
+  public void setup(
+    final TestInfo inTestInfo)
     throws Exception
   {
+    this.testInfo = inTestInfo;
+    LOG.debug("{}: test setup", this.testInfo.getDisplayName());
+
     this.server =
       QWebServers.createServer(20000);
 
@@ -137,6 +152,7 @@ public final class HBClientAsynchronousTest
   public void tearDown()
     throws Exception
   {
+    LOG.debug("{}: test teardown", this.testInfo.getDisplayName());
     this.server.close();
   }
 
@@ -151,11 +167,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -173,10 +189,41 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+  }
+
+  private void waitForClose(
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient)
+    throws InterruptedException
+  {
+    LOG.debug("{}: waiting for close", this.testInfo.getDisplayName());
+
+    for (int index = 0; index < 1000_000_00; ++index) {
+      LOG.debug(
+        "{}: still waiting ({})",
+        this.testInfo.getDisplayName(),
+        leakedClient.stateNow()
+      );
+
+      if (leakedClient.isClosed()) {
+        break;
+      }
+      sleep();
+    }
+
+    LOG.debug(
+      "{}: waited for close successfully",
+      this.testInfo.getDisplayName());
+  }
+
+  private static void sleep()
+    throws InterruptedException
+  {
+    Thread.sleep(10L);
   }
 
   /**
@@ -190,11 +237,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -213,7 +260,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
@@ -230,11 +278,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -252,7 +300,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_CONNECTED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -270,11 +319,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -288,8 +337,8 @@ public final class HBClientAsynchronousTest
         assertThrows(
           ExecutionException.class,
           () -> client.loginAsyncOrElseThrow(
-            this.credentials,
-            HExampleException::new)
+              this.credentials,
+              HExampleException::new)
             .get()
         );
 
@@ -300,7 +349,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
@@ -317,11 +367,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -337,7 +387,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_CONNECTED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -355,11 +406,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -384,7 +435,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -404,11 +456,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -440,7 +492,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -460,11 +513,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -489,7 +542,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -516,11 +570,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -545,7 +599,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -572,11 +627,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -603,12 +658,15 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
     assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
+    assertEquals(CLIENT_CLOSED, states.remove(0));
+
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
 
@@ -623,21 +681,20 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
       assertFalse(client.isConnected());
-
-      Thread.sleep(1_000L);
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
 
@@ -652,11 +709,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -679,7 +736,8 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -697,11 +755,11 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
+    final List<HBState> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
@@ -728,10 +786,10 @@ public final class HBClientAsynchronousTest
 
       assertInstanceOf(NullPointerException.class, result1.get());
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
-      Thread.sleep(20L);
     }
 
-    Thread.sleep(20L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -740,7 +798,8 @@ public final class HBClientAsynchronousTest
   }
 
   /**
-   * If a client signals that polling events succeeded, the events are delivered.
+   * If a client signals that polling events succeeded, the events are
+   * delivered.
    *
    * @throws Exception On errors
    */
@@ -750,13 +809,13 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
-    final ArrayList<HBEventType> events;
+    final List<HBState> states;
+    final List<HBEventType> events;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
-      events = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
+      events = Collections.synchronizedList(new ArrayList<>());
       client.state().subscribe(new HPerpetualSubscriber<>(states::add));
       client.events().subscribe(new HPerpetualSubscriber<>(events::add));
 
@@ -791,7 +850,8 @@ public final class HBClientAsynchronousTest
       );
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -808,7 +868,8 @@ public final class HBClientAsynchronousTest
   }
 
   /**
-   * If a client signals that polling events failed, the events are not delivered.
+   * If a client signals that polling events failed, the events are not
+   * delivered.
    *
    * @throws Exception On errors
    */
@@ -818,13 +879,13 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final ArrayList<HBState> states;
-    final ArrayList<HBEventType> events;
+    final List<HBState> states;
+    final List<HBEventType> events;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
-      states = new ArrayList<>();
-      events = new ArrayList<>();
+      states = Collections.synchronizedList(new ArrayList<>());
+      events = Collections.synchronizedList(new ArrayList<>());
       client.state().subscribe(new HPerpetualSubscriber<>(states::add));
       client.events().subscribe(new HPerpetualSubscriber<>(events::add));
 
@@ -848,7 +909,8 @@ public final class HBClientAsynchronousTest
       assertEquals(List.of(), events);
     }
 
-    Thread.sleep(10L);
+    this.waitForClose(leakedClient);
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -866,13 +928,13 @@ public final class HBClientAsynchronousTest
 
   interface HandlerType extends
     HBClientHandlerType<
-          Exception,
-          HBCommandType,
-          HBResponseType,
-          HBResponseType,
-          HBResponseType,
-          HBEventType,
-          HBCredentialsType>
+      Exception,
+      HBCommandType,
+      HBResponseType,
+      HBResponseType,
+      HBResponseType,
+      HBEventType,
+      HBCredentialsType>
   {
 
   }

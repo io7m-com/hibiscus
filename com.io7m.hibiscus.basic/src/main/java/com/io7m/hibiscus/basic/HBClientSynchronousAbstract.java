@@ -26,16 +26,16 @@ import com.io7m.hibiscus.api.HBResultSuccess;
 import com.io7m.hibiscus.api.HBResultType;
 import com.io7m.hibiscus.api.HBState;
 import com.io7m.junreachable.UnreachableCodeException;
+import net.jcip.annotations.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
+import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSING;
 import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
 import static com.io7m.hibiscus.api.HBState.CLIENT_DISCONNECTED;
 import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND;
@@ -73,11 +73,14 @@ public abstract class HBClientSynchronousAbstract<
   private static final Logger LOG =
     LoggerFactory.getLogger(HBClientSynchronousAbstract.class);
 
-  private final SubmissionPublisher<E> events;
-  private final SubmissionPublisher<HBState> state;
-  private final AtomicReference<HBState> stateNow;
-  private final AtomicBoolean closed;
+  private final SubmissionPublisher<E> eventPublisher;
+  private final SubmissionPublisher<HBState> statePublisher;
+
+  @GuardedBy("stateLock")
+  private HBState stateNow;
   private final HBClientHandlerType<X, C, R, RS, RF, E, CR> disconnectedHandler;
+  private final HBDirectExecutor executor;
+  private final Object stateLock;
   private HBClientHandlerType<X, C, R, RS, RF, E, CR> handler;
 
   /**
@@ -92,16 +95,26 @@ public abstract class HBClientSynchronousAbstract<
   {
     this.disconnectedHandler =
       Objects.requireNonNull(inDisconnectedHandler, "disconnectedHandler");
-    this.events =
-      new SubmissionPublisher<>();
-    this.state =
-      new SubmissionPublisher<>();
+
+    this.executor =
+      new HBDirectExecutor();
+    this.eventPublisher =
+      new SubmissionPublisher<>(this.executor, Flow.defaultBufferSize());
+    this.statePublisher =
+      new SubmissionPublisher<>(this.executor, Flow.defaultBufferSize());
+
+    this.stateLock =
+      new Object();
     this.stateNow =
-      new AtomicReference<>(HBState.CLIENT_DISCONNECTED);
-    this.closed =
-      new AtomicBoolean(false);
+      CLIENT_DISCONNECTED;
     this.handler =
       this.disconnectedHandler;
+  }
+
+  @Override
+  public final boolean isClosed()
+  {
+    return this.stateNow() == CLIENT_CLOSED;
   }
 
   @Override
@@ -113,19 +126,21 @@ public abstract class HBClientSynchronousAbstract<
   @Override
   public final Flow.Publisher<E> events()
   {
-    return this.events;
+    return this.eventPublisher;
   }
 
   @Override
   public final Flow.Publisher<HBState> state()
   {
-    return this.state;
+    return this.statePublisher;
   }
 
   @Override
   public final HBState stateNow()
   {
-    return this.stateNow.get();
+    synchronized (this.stateLock) {
+      return this.stateNow;
+    }
   }
 
   @Override
@@ -137,7 +152,7 @@ public abstract class HBClientSynchronousAbstract<
     this.publishState(CLIENT_POLLING_EVENTS);
 
     try {
-      this.handler.onPollEvents().forEach(this.events::submit);
+      this.handler.onPollEvents().forEach(this.eventPublisher::submit);
       LOG.debug("polling events succeeded");
       this.publishState(CLIENT_POLLING_EVENTS_SUCCEEDED);
     } catch (final Exception e) {
@@ -186,16 +201,39 @@ public abstract class HBClientSynchronousAbstract<
 
   private void checkNotClosed()
   {
-    if (this.closed.get()) {
-      throw new IllegalStateException("Client is closed!");
+    synchronized (this.stateLock) {
+      final var state = this.stateNow();
+      if (state == CLIENT_CLOSING || state == CLIENT_CLOSED) {
+        throw new IllegalStateException("Client is closed!");
+      }
     }
   }
 
   private void publishState(
     final HBState newState)
   {
-    this.stateNow.set(newState);
-    this.state.submit(newState);
+    final HBState stateThen;
+    synchronized (this.stateLock) {
+      stateThen = this.stateNow();
+      if (stateThen == CLIENT_CLOSED) {
+        return;
+      }
+    }
+
+    logStateChange(stateThen, newState);
+    synchronized (this.stateLock) {
+      this.stateNow = newState;
+    }
+    this.statePublisher.submit(newState);
+  }
+
+  private static void logStateChange(
+    final HBState oldState,
+    final HBState newState)
+  {
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("state {} -> {}", oldState, newState);
+    }
   }
 
   @Override
@@ -249,14 +287,31 @@ public abstract class HBClientSynchronousAbstract<
   @Override
   public final void close()
   {
-    if (this.closed.compareAndSet(false, true)) {
-      this.publishState(CLIENT_CLOSED);
+    LOG.trace("close requested");
+
+    synchronized (this.stateLock) {
+      final var state = this.stateNow;
+      if (state.isClosingOrClosed()) {
+        return;
+      }
+      this.stateNow = CLIENT_CLOSING;
+    }
+
+    try {
+      LOG.trace("close starting");
+      this.statePublisher.submit(CLIENT_CLOSED);
 
       try {
-        this.state.close();
+        this.statePublisher.close();
       } finally {
-        this.events.close();
+        this.eventPublisher.close();
       }
+    } finally {
+      synchronized (this.stateLock) {
+        this.stateNow = CLIENT_CLOSED;
+      }
+      logStateChange(CLIENT_CLOSING, CLIENT_CLOSED);
+      LOG.trace("close completed");
     }
   }
 }

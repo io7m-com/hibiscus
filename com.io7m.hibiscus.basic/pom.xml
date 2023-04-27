@@ -9,7 +9,7 @@
   <parent>
     <artifactId>com.io7m.hibiscus</artifactId>
     <groupId>com.io7m.hibiscus</groupId>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
   </parent>
   <artifactId>com.io7m.hibiscus.basic</artifactId>
 
@@ -32,6 +32,10 @@
     <dependency>
       <groupId>com.io7m.junreachable</groupId>
       <artifactId>com.io7m.junreachable.core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.io7m.jcip</groupId>
+      <artifactId>com.io7m.jcip.annotations</artifactId>
     </dependency>
 
     <dependency>

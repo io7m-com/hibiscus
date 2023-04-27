@@ -26,71 +26,162 @@ public enum HBState
    * The client is authenticating with the server.
    */
 
-  CLIENT_EXECUTING_LOGIN,
+  CLIENT_EXECUTING_LOGIN {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client failed to authenticate with the server.
    */
 
-  CLIENT_EXECUTING_LOGIN_FAILED,
+  CLIENT_EXECUTING_LOGIN_FAILED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client successfully authenticated with the server.
    */
 
-  CLIENT_EXECUTING_LOGIN_SUCCEEDED,
+  CLIENT_EXECUTING_LOGIN_SUCCEEDED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client is connected.
    */
 
-  CLIENT_CONNECTED,
+  CLIENT_CONNECTED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client is disconnected.
    */
 
-  CLIENT_DISCONNECTED,
+  CLIENT_DISCONNECTED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client is executing a command.
    */
 
-  CLIENT_EXECUTING_COMMAND,
+  CLIENT_EXECUTING_COMMAND {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client failed to execute a command.
    */
 
-  CLIENT_EXECUTING_COMMAND_FAILED,
+  CLIENT_EXECUTING_COMMAND_FAILED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client successfully executed a command.
    */
 
-  CLIENT_EXECUTING_COMMAND_SUCCEEDED,
+  CLIENT_EXECUTING_COMMAND_SUCCEEDED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client is polling the server for events.
    */
 
-  CLIENT_POLLING_EVENTS,
+  CLIENT_POLLING_EVENTS {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client failed to poll the server for events.
    */
 
-  CLIENT_POLLING_EVENTS_FAILED,
+  CLIENT_POLLING_EVENTS_FAILED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
 
   /**
    * The client successfully polled the server for events.
    */
 
-  CLIENT_POLLING_EVENTS_SUCCEEDED,
+  CLIENT_POLLING_EVENTS_SUCCEEDED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return false;
+    }
+  },
+
+  /**
+   * The client has been instructed to close.
+   */
+
+  CLIENT_CLOSING {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return true;
+    }
+  },
 
   /**
    * The client has been closed.
    */
 
-  CLIENT_CLOSED
+  CLIENT_CLOSED {
+    @Override
+    public boolean isClosingOrClosed()
+    {
+      return true;
+    }
+  };
+
+  /**
+   * @return {@code true} if this state implies the client is either closing or
+   * has closed
+   */
+
+  public abstract boolean isClosingOrClosed();
 }

@@ -15,24 +15,30 @@
  */
 
 
-package com.io7m.hibiscus.api;
+package com.io7m.hibiscus.basic;
+
+import java.util.concurrent.Executor;
 
 /**
- * The type of closeable resources.
- *
- * @param <X> The type of raised exceptions.
+ * An executor that executes on the calling thread.
  */
 
-public interface HBClientCloseableType<X extends Exception>
-  extends AutoCloseable
+public final class HBDirectExecutor
+  implements Executor
 {
   /**
-   * @return {@code true} if this resource is closed
+   * An executor that executes on the calling thread.
    */
 
-  boolean isClosed();
+  public HBDirectExecutor()
+  {
+
+  }
 
   @Override
-  void close()
-    throws X;
+  public void execute(
+    final Runnable command)
+  {
+    command.run();
+  }
 }
