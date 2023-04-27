@@ -32,11 +32,13 @@ import com.io7m.quixote.core.QWebServers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
 import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
@@ -58,6 +60,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Timeout(value = 1L, unit = TimeUnit.MINUTES)
 public final class HBClientSynchronousTest
 {
   private QWebServerType server;
@@ -158,6 +161,10 @@ public final class HBClientSynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, states.remove(0));
@@ -202,6 +209,10 @@ public final class HBClientSynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, states.remove(0));
@@ -239,6 +250,10 @@ public final class HBClientSynchronousTest
       assertTrue(result.isSuccess());
       assertEquals(CLIENT_CONNECTED, client.stateNow());
       assertTrue(client.isConnected());
+    }
+
+    while (!leakedClient.isClosed()) {
+      sleep();
     }
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
@@ -280,6 +295,10 @@ public final class HBClientSynchronousTest
 
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
       assertFalse(client.isConnected());
+    }
+
+    while (!leakedClient.isClosed()) {
+      sleep();
     }
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
@@ -328,6 +347,10 @@ public final class HBClientSynchronousTest
 
       assertFalse(result.isSuccess());
       assertTrue(client.isConnected());
+    }
+
+    while (!leakedClient.isClosed()) {
+      sleep();
     }
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
@@ -389,6 +412,10 @@ public final class HBClientSynchronousTest
       assertTrue(client.isConnected());
     }
 
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -438,6 +465,10 @@ public final class HBClientSynchronousTest
 
       assertTrue(result.isSuccess());
       assertTrue(client.isConnected());
+    }
+
+    while (!leakedClient.isClosed()) {
+      sleep();
     }
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
@@ -495,6 +526,10 @@ public final class HBClientSynchronousTest
       });
 
       assertTrue(client.isConnected());
+    }
+
+    while (!leakedClient.isClosed()) {
+      sleep();
     }
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
@@ -595,6 +630,10 @@ public final class HBClientSynchronousTest
       );
     }
 
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -649,6 +688,10 @@ public final class HBClientSynchronousTest
       assertEquals(List.of(), events);
     }
 
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
     assertEquals(CLIENT_CONNECTED, states.remove(0));
@@ -657,6 +700,12 @@ public final class HBClientSynchronousTest
     assertEquals(CLIENT_CLOSED, states.remove(0));
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+  }
+
+  private static void sleep()
+    throws InterruptedException
+  {
+    Thread.sleep(1L);
   }
 
   interface HandlerType extends

@@ -34,11 +34,13 @@ import com.io7m.quixote.core.QWebServers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
 import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
@@ -62,6 +64,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Timeout(value = 1L, unit = TimeUnit.MINUTES)
 public final class HBClientAsynchronousTest
 {
   private QWebServerType server;
