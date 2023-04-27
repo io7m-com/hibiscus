@@ -20,6 +20,7 @@ jobs:
         run: mvn --errors clean verify site
       - name: Upload test logs
         uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: test-logs
           path: ./com.io7m.hibiscus.tests/target/surefire-reports
