@@ -89,6 +89,12 @@ public enum HBState
   CLIENT_POLLING_EVENTS_SUCCEEDED,
 
   /**
+   * The client has been instructed to close.
+   */
+
+  CLIENT_CLOSING,
+
+  /**
    * The client has been closed.
    */
 
