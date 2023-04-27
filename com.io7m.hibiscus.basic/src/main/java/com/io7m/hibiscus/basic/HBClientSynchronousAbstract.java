@@ -276,6 +276,10 @@ public abstract class HBClientSynchronousAbstract<
   public final void close()
   {
     if (this.closed.compareAndSet(false, true)) {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("close");
+      }
+
       this.publishState(CLIENT_CLOSED);
 
       try {
