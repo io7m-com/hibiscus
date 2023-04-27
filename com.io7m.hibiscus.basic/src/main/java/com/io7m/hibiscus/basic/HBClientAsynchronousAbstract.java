@@ -145,46 +145,41 @@ public abstract class HBClientAsynchronousAbstract<
   private void executeClose(
     final OpType.Close<X, C, R, RS, RF, E, CR> close)
   {
-    /*
-     * Cancel all pending operations in the queue. The guard on the "closed"
-     * atomic boolean prevents new operations from being submitted after a
-     * close request has been submitted, so there should be no risk of
-     * operations submitted after closing hanging forever.
-     */
-
     try {
-      if (LOG.isTraceEnabled()) {
-        LOG.trace("close op executing");
-      }
-
-      this.operationQueue.forEach(op -> {
-        if (!Objects.equals(close.future, op.future())) {
-          op.future().cancel(true);
-        }
-      });
       try {
-        this.delegate.close();
-      } catch (final Exception e) {
-        LOG.debug("close op: ", e);
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("close op executing");
+        }
+
+        try {
+          this.delegate.close();
+        } catch (final Exception e) {
+          LOG.debug("close op: ", e);
+        }
+      } finally {
+        this.executeCloseShutdownExecutor();
       }
     } finally {
-      if (LOG.isTraceEnabled()) {
-        LOG.trace("close op shutting down executor");
-      }
-
-      this.commandExecutor.shutdown();
-
-      try {
-        this.commandExecutor.awaitTermination(1L, TimeUnit.SECONDS);
-      } catch (final InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-
       close.future.complete(null);
 
       if (LOG.isTraceEnabled()) {
         LOG.trace("close op completed");
       }
+    }
+  }
+
+  private void executeCloseShutdownExecutor()
+  {
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("close op shutting down executor");
+    }
+
+    this.commandExecutor.shutdown();
+
+    try {
+      this.commandExecutor.awaitTermination(1L, TimeUnit.SECONDS);
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -316,8 +311,7 @@ public abstract class HBClientAsynchronousAbstract<
         LOG.trace("close scheduled");
       }
 
-      final var future =
-        CompletableFuture.completedFuture(null);
+      final var future = new CompletableFuture<Void>();
       this.operationQueue.add(new OpType.Close<>(future));
 
       try {
@@ -403,7 +397,7 @@ public abstract class HBClientAsynchronousAbstract<
       RF extends R,
       E extends HBEventType,
       CR extends HBCredentialsType>(
-      CompletableFuture<Object> future)
+      CompletableFuture<Void> future)
       implements HBClientAsynchronousAbstract.OpType<X, C, R, RS, RF, E, CR>
     {
 
