@@ -162,8 +162,6 @@ public abstract class HBClientAsynchronousAbstract<
         this.delegate.close();
       } catch (final Exception e) {
         LOG.debug("close: ", e);
-      } finally {
-        close.future.complete(null);
       }
     } finally {
       this.commandExecutor.shutdown();
@@ -173,6 +171,8 @@ public abstract class HBClientAsynchronousAbstract<
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
       }
+
+      close.future.complete(null);
     }
   }
 
