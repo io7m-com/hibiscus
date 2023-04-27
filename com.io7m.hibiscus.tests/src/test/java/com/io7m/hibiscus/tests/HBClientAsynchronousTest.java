@@ -35,6 +35,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +69,9 @@ import static org.mockito.Mockito.when;
 @Timeout(value = 5L, unit = TimeUnit.SECONDS)
 public final class HBClientAsynchronousTest
 {
+  private static final Logger LOG =
+    LoggerFactory.getLogger(HBClientAsynchronousTest.class);
+
   private QWebServerType server;
   private HBResultFailure<HBResponseType, HBResponseType> failureCommand;
   private HBResultSuccess<HBResponseType, HBResponseType> successCommand;
@@ -177,13 +182,24 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+  }
+
+  private static void waitForClose(
+    final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient)
+    throws InterruptedException
+  {
+    LOG.debug("waiting for close");
+
+    while (!leakedClient.isClosed()) {
+      sleep();
+    }
+
+    LOG.debug("waited for close successfully");
   }
 
   private static void sleep()
@@ -226,9 +242,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
@@ -268,9 +282,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_CONNECTED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -319,9 +331,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
@@ -359,9 +369,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_CONNECTED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -409,9 +417,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -468,9 +474,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -520,9 +524,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -579,9 +581,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -640,9 +640,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -677,9 +675,7 @@ public final class HBClientAsynchronousTest
       assertFalse(client.isConnected());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
   }
@@ -722,9 +718,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -776,9 +770,7 @@ public final class HBClientAsynchronousTest
       assertEquals(CLIENT_DISCONNECTED, client.stateNow());
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -840,9 +832,7 @@ public final class HBClientAsynchronousTest
       );
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
@@ -901,9 +891,7 @@ public final class HBClientAsynchronousTest
       assertEquals(List.of(), events);
     }
 
-    while (!leakedClient.isClosed()) {
-      sleep();
-    }
+    waitForClose(leakedClient);
 
     assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
     assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
