@@ -287,6 +287,10 @@ public abstract class HBClientSynchronousAbstract<
   @Override
   public final void close()
   {
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("close requested");
+    }
+
     synchronized (this.stateLock) {
       final var state = this.stateNow;
       if (state == CLIENT_CLOSING || state == CLIENT_CLOSED) {
@@ -297,7 +301,7 @@ public abstract class HBClientSynchronousAbstract<
 
     try {
       if (LOG.isTraceEnabled()) {
-        LOG.trace("close");
+        LOG.trace("close starting");
       }
 
       this.statePublisher.submit(CLIENT_CLOSED);

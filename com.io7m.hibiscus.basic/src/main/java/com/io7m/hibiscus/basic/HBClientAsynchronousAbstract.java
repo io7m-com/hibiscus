@@ -153,6 +153,10 @@ public abstract class HBClientAsynchronousAbstract<
      */
 
     try {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("close op executing");
+      }
+
       this.operationQueue.forEach(op -> {
         if (!Objects.equals(close.future, op.future())) {
           op.future().cancel(true);
@@ -161,9 +165,13 @@ public abstract class HBClientAsynchronousAbstract<
       try {
         this.delegate.close();
       } catch (final Exception e) {
-        LOG.debug("close: ", e);
+        LOG.debug("close op: ", e);
       }
     } finally {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("close op shutting down executor");
+      }
+
       this.commandExecutor.shutdown();
 
       try {
@@ -173,6 +181,10 @@ public abstract class HBClientAsynchronousAbstract<
       }
 
       close.future.complete(null);
+
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("close op completed");
+      }
     }
   }
 
@@ -295,12 +307,24 @@ public abstract class HBClientAsynchronousAbstract<
   @Override
   public final void close()
   {
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("close requested");
+    }
+
     if (this.closed.compareAndSet(false, true)) {
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("close scheduled");
+      }
+
       final var future =
         CompletableFuture.completedFuture(null);
       this.operationQueue.add(new OpType.Close<>(future));
+
       try {
         future.get();
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("close future completed");
+        }
       } catch (final InterruptedException e) {
         Thread.currentThread().interrupt();
       } catch (final ExecutionException e) {
