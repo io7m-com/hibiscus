@@ -202,8 +202,8 @@ public abstract class HBClientSynchronousAbstract<
   private void checkNotClosed()
   {
     synchronized (this.stateLock) {
-      final var stateNow = this.stateNow();
-      if (stateNow == CLIENT_CLOSING || stateNow == CLIENT_CLOSED) {
+      final var state = this.stateNow();
+      if (state == CLIENT_CLOSING || state == CLIENT_CLOSED) {
         throw new IllegalStateException("Client is closed!");
       }
     }
