@@ -199,7 +199,7 @@ public abstract class HBClientSynchronousAbstract<
 
   private void checkNotClosed()
   {
-    if (this.closedExternal.get()) {
+    if (this.closedInternal.get()) {
       throw new IllegalStateException("Client is closed!");
     }
   }
@@ -214,7 +214,7 @@ public abstract class HBClientSynchronousAbstract<
       return;
     }
 
-    if (this.closedExternal.get()) {
+    if (this.closedInternal.get()) {
       return;
     }
 
