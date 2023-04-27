@@ -109,6 +109,8 @@ public final class HBClientAsynchronousTest
   public void setup()
     throws Exception
   {
+    LOG.debug("test setup");
+
     this.server =
       QWebServers.createServer(20000);
 
@@ -146,6 +148,7 @@ public final class HBClientAsynchronousTest
   public void tearDown()
     throws Exception
   {
+    LOG.debug("test teardown");
     this.server.close();
   }
 
