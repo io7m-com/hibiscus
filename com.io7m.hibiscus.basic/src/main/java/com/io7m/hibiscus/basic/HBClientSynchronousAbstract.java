@@ -201,6 +201,7 @@ public abstract class HBClientSynchronousAbstract<
     final HBState newState)
   {
     if (newState == CLIENT_CLOSED) {
+      this.logStateChange(newState);
       this.stateNow.set(newState);
       this.state.submit(newState);
       return;
@@ -210,8 +211,17 @@ public abstract class HBClientSynchronousAbstract<
       return;
     }
 
+    this.logStateChange(newState);
     this.stateNow.set(newState);
     this.state.submit(newState);
+  }
+
+  private void logStateChange(
+    final HBState newState)
+  {
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("state {} -> {}", this.stateNow.get(), newState);
+    }
   }
 
   @Override
