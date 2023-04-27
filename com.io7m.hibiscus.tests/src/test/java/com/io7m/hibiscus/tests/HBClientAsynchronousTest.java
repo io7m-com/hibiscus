@@ -223,7 +223,7 @@ public final class HBClientAsynchronousTest
   private static void sleep()
     throws InterruptedException
   {
-    Thread.sleep(1L);
+    Thread.sleep(10L);
   }
 
   /**
