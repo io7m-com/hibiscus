@@ -64,7 +64,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@Timeout(value = 1L, unit = TimeUnit.MINUTES)
+@Timeout(value = 5L, unit = TimeUnit.SECONDS)
 public final class HBClientAsynchronousTest
 {
   private QWebServerType server;
