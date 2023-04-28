@@ -215,6 +215,10 @@ public abstract class HBClientSynchronousAbstract<
     throw new UnreachableCodeException();
   }
 
+  /**
+   * Check that this client is not closing or has not closed.
+   */
+
   protected final void checkNotClosingOrClosed()
   {
     synchronized (this.stateLock) {
@@ -283,19 +287,47 @@ public abstract class HBClientSynchronousAbstract<
     return result;
   }
 
+  /**
+   * A method called when a command is executed successfully.
+   *
+   * @param command The command
+   * @param result  The result
+   */
+
   protected abstract void onCommandExecuteSucceeded(
     C command,
     RS result
   );
+
+  /**
+   * A method called when a command fails.
+   *
+   * @param command The command
+   * @param result  The result
+   */
 
   protected abstract void onCommandExecuteFailed(
     C command,
     RF result
   );
 
+  /**
+   * A method called when a login attempt completes successfully.
+   *
+   * @param credentials The credentials
+   * @param result      The result
+   */
+
   protected abstract void onLoginExecuteSucceeded(
     CR credentials,
     RS result);
+
+  /**
+   * A method called when a login attempt fails.
+   *
+   * @param credentials The credentials
+   * @param result      The result
+   */
 
   protected abstract void onLoginExecuteFailed(
     CR credentials,
@@ -317,15 +349,27 @@ public abstract class HBClientSynchronousAbstract<
     }
   }
 
+  /**
+   * @return The current handler
+   */
+
   protected final HBClientHandlerType<X, C, R, RS, RF, E, CR> currentHandler()
   {
     return this.handler;
   }
 
+  /**
+   * @return The client event publisher
+   */
+
   protected final SubmissionPublisher<E> eventPublisher()
   {
     return this.eventPublisher;
   }
+
+  /**
+   * @return The client state publisher
+   */
 
   protected final SubmissionPublisher<HBState> statePublisher()
   {
