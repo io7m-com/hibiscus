@@ -55,4 +55,36 @@ public final class HBClientSynchronous<
   {
     super(inDisconnectedHandler);
   }
+
+  @Override
+  protected void onCommandExecuteSucceeded(
+    final C command,
+    final RS result)
+  {
+
+  }
+
+  @Override
+  protected void onCommandExecuteFailed(
+    final C command,
+    final RF result)
+  {
+
+  }
+
+  @Override
+  protected void onLoginExecuteSucceeded(
+    final CR credentials,
+    final RS result)
+  {
+
+  }
+
+  @Override
+  protected void onLoginExecuteFailed(
+    final CR credentials,
+    final RF result)
+  {
+
+  }
 }

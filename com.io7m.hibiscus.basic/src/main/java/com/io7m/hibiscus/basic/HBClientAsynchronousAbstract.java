@@ -244,7 +244,17 @@ public abstract class HBClientAsynchronousAbstract<
     }
   }
 
-  private void checkNotClosingOrClosed()
+  protected final HBClientSynchronousType<X, C, R, RS, RF, E, CR> delegate()
+  {
+    return this.delegate;
+  }
+
+  protected final ExecutorService commandExecutor()
+  {
+    return this.commandExecutor;
+  }
+
+  protected final void checkNotClosingOrClosed()
   {
     if (this.closing.get()) {
       throw new IllegalStateException("Client is closed!");

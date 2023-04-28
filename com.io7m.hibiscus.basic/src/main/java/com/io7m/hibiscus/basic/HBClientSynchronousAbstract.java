@@ -75,12 +75,11 @@ public abstract class HBClientSynchronousAbstract<
 
   private final SubmissionPublisher<E> eventPublisher;
   private final SubmissionPublisher<HBState> statePublisher;
-
-  @GuardedBy("stateLock")
-  private HBState stateNow;
   private final HBClientHandlerType<X, C, R, RS, RF, E, CR> disconnectedHandler;
   private final HBDirectExecutor executor;
   private final Object stateLock;
+  @GuardedBy("stateLock")
+  private HBState stateNow;
   private HBClientHandlerType<X, C, R, RS, RF, E, CR> handler;
 
   /**
@@ -109,6 +108,15 @@ public abstract class HBClientSynchronousAbstract<
       CLIENT_DISCONNECTED;
     this.handler =
       this.disconnectedHandler;
+  }
+
+  private static void logStateChange(
+    final HBState oldState,
+    final HBState newState)
+  {
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("state {} -> {}", oldState, newState);
+    }
   }
 
   @Override
@@ -147,7 +155,7 @@ public abstract class HBClientSynchronousAbstract<
   public final void pollEvents()
     throws InterruptedException
   {
-    this.checkNotClosed();
+    this.checkNotClosingOrClosed();
 
     this.publishState(CLIENT_POLLING_EVENTS);
 
@@ -168,7 +176,7 @@ public abstract class HBClientSynchronousAbstract<
     throws InterruptedException
   {
     Objects.requireNonNull(credentials, "credentials");
-    this.checkNotClosed();
+    this.checkNotClosingOrClosed();
 
     this.disconnect();
     this.publishState(CLIENT_EXECUTING_LOGIN);
@@ -189,17 +197,29 @@ public abstract class HBClientSynchronousAbstract<
       this.publishState(CLIENT_EXECUTING_LOGIN_SUCCEEDED);
       this.publishState(CLIENT_CONNECTED);
       LOG.debug("login succeeded");
+      this.onLoginExecuteSucceeded(
+        credentials,
+        success.result().loginResponse()
+      );
       return success.map(HBClientNewHandler::loginResponse);
     }
     if (result instanceof final HBResultFailure<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> failure) {
       this.publishState(CLIENT_EXECUTING_LOGIN_FAILED);
       LOG.debug("login failed");
+      this.onLoginExecuteFailed(
+        credentials,
+        failure.result()
+      );
       return failure.cast();
     }
     throw new UnreachableCodeException();
   }
 
-  private void checkNotClosed()
+  /**
+   * Check that this client is not closing or has not closed.
+   */
+
+  protected final void checkNotClosingOrClosed()
   {
     synchronized (this.stateLock) {
       final var state = this.stateNow();
@@ -227,22 +247,13 @@ public abstract class HBClientSynchronousAbstract<
     this.statePublisher.submit(newState);
   }
 
-  private static void logStateChange(
-    final HBState oldState,
-    final HBState newState)
-  {
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("state {} -> {}", oldState, newState);
-    }
-  }
-
   @Override
   public final HBResultType<RS, RF> execute(
     final C command)
     throws InterruptedException
   {
     Objects.requireNonNull(command, "command");
-    this.checkNotClosed();
+    this.checkNotClosingOrClosed();
 
     this.publishState(CLIENT_EXECUTING_COMMAND);
 
@@ -260,19 +271,73 @@ public abstract class HBClientSynchronousAbstract<
     if (result.isSuccess()) {
       this.publishState(CLIENT_EXECUTING_COMMAND_SUCCEEDED);
       LOG.debug("command succeeded");
+      this.onCommandExecuteSucceeded(
+        command,
+        ((HBResultSuccess<RS, RF>) result).result()
+      );
     } else {
       this.publishState(CLIENT_EXECUTING_COMMAND_FAILED);
       LOG.debug("command failed");
+      this.onCommandExecuteFailed(
+        command,
+        ((HBResultFailure<RS, RF>) result).result()
+      );
     }
 
     return result;
   }
 
+  /**
+   * A method called when a command is executed successfully.
+   *
+   * @param command The command
+   * @param result  The result
+   */
+
+  protected abstract void onCommandExecuteSucceeded(
+    C command,
+    RS result
+  );
+
+  /**
+   * A method called when a command fails.
+   *
+   * @param command The command
+   * @param result  The result
+   */
+
+  protected abstract void onCommandExecuteFailed(
+    C command,
+    RF result
+  );
+
+  /**
+   * A method called when a login attempt completes successfully.
+   *
+   * @param credentials The credentials
+   * @param result      The result
+   */
+
+  protected abstract void onLoginExecuteSucceeded(
+    CR credentials,
+    RS result);
+
+  /**
+   * A method called when a login attempt fails.
+   *
+   * @param credentials The credentials
+   * @param result      The result
+   */
+
+  protected abstract void onLoginExecuteFailed(
+    CR credentials,
+    RF result);
+
   @Override
   public final void disconnect()
     throws InterruptedException
   {
-    this.checkNotClosed();
+    this.checkNotClosingOrClosed();
 
     if (this.handler.onIsConnected()) {
       try {
@@ -282,6 +347,33 @@ public abstract class HBClientSynchronousAbstract<
         this.publishState(CLIENT_DISCONNECTED);
       }
     }
+  }
+
+  /**
+   * @return The current handler
+   */
+
+  protected final HBClientHandlerType<X, C, R, RS, RF, E, CR> currentHandler()
+  {
+    return this.handler;
+  }
+
+  /**
+   * @return The client event publisher
+   */
+
+  protected final SubmissionPublisher<E> eventPublisher()
+  {
+    return this.eventPublisher;
+  }
+
+  /**
+   * @return The client state publisher
+   */
+
+  protected final SubmissionPublisher<HBState> statePublisher()
+  {
+    return this.statePublisher;
   }
 
   @Override
