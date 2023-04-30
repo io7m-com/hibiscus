@@ -39,7 +39,7 @@ public interface HBClientAsynchronousType<
   RF extends R,
   E extends HBEventType,
   CR extends HBCredentialsType>
-  extends HBClientStatusType<E>,
+  extends HBClientStatusType<C, R, RF, E, CR>,
   HBClientCloseableType<X>
 {
   /**

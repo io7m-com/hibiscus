@@ -48,43 +48,14 @@ public final class HBClientSynchronous<
    *
    * @param inDisconnectedHandler The handler that will be (re)used in the
    *                              disconnected state.
+   * @param inExceptions          A function that can produce responses from
+   *                              exceptions
    */
 
   public HBClientSynchronous(
-    final HBClientHandlerType<X, C, R, RS, RF, E, CR> inDisconnectedHandler)
+    final HBClientHandlerType<X, C, R, RS, RF, E, CR> inDisconnectedHandler,
+    final HBClientExceptionTransformerType<RF> inExceptions)
   {
-    super(inDisconnectedHandler);
-  }
-
-  @Override
-  protected void onCommandExecuteSucceeded(
-    final C command,
-    final RS result)
-  {
-
-  }
-
-  @Override
-  protected void onCommandExecuteFailed(
-    final C command,
-    final RF result)
-  {
-
-  }
-
-  @Override
-  protected void onLoginExecuteSucceeded(
-    final CR credentials,
-    final RS result)
-  {
-
-  }
-
-  @Override
-  protected void onLoginExecuteFailed(
-    final CR credentials,
-    final RF result)
-  {
-
+    super(inDisconnectedHandler, inExceptions);
   }
 }
