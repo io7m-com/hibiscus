@@ -24,7 +24,20 @@ import com.io7m.hibiscus.api.HBResponseType;
 import com.io7m.hibiscus.api.HBResultFailure;
 import com.io7m.hibiscus.api.HBResultSuccess;
 import com.io7m.hibiscus.api.HBResultType;
-import com.io7m.hibiscus.api.HBState;
+import com.io7m.hibiscus.api.HBStateType;
+import com.io7m.hibiscus.api.HBStateType.HBStateClosed;
+import com.io7m.hibiscus.api.HBStateType.HBStateClosing;
+import com.io7m.hibiscus.api.HBStateType.HBStateConnected;
+import com.io7m.hibiscus.api.HBStateType.HBStateDisconnected;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingCommand;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingCommandFailed;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingCommandSucceeded;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLogin;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLoginFailed;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLoginSucceeded;
+import com.io7m.hibiscus.api.HBStateType.HBStatePollingEvents;
+import com.io7m.hibiscus.api.HBStateType.HBStatePollingEventsFailed;
+import com.io7m.hibiscus.api.HBStateType.HBStatePollingEventsSucceeded;
 import com.io7m.junreachable.UnreachableCodeException;
 import net.jcip.annotations.GuardedBy;
 import org.slf4j.Logger;
@@ -33,20 +46,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Objects;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
-
-import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSING;
-import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_DISCONNECTED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND_FAILED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND_SUCCEEDED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_LOGIN;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_LOGIN_FAILED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_LOGIN_SUCCEEDED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS;
-import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS_FAILED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS_SUCCEEDED;
 
 /**
  * The basic synchronous client.
@@ -74,12 +73,13 @@ public abstract class HBClientSynchronousAbstract<
     LoggerFactory.getLogger(HBClientSynchronousAbstract.class);
 
   private final SubmissionPublisher<E> eventPublisher;
-  private final SubmissionPublisher<HBState> statePublisher;
+  private final SubmissionPublisher<HBStateType<C, R, RF, CR>> statePublisher;
   private final HBClientHandlerType<X, C, R, RS, RF, E, CR> disconnectedHandler;
   private final HBDirectExecutor executor;
   private final Object stateLock;
+  private final HBClientExceptionTransformerType<RF> exceptions;
   @GuardedBy("stateLock")
-  private HBState stateNow;
+  private HBStateType<C, R, RF, CR> stateNow;
   private HBClientHandlerType<X, C, R, RS, RF, E, CR> handler;
 
   /**
@@ -87,13 +87,18 @@ public abstract class HBClientSynchronousAbstract<
    *
    * @param inDisconnectedHandler The handler that will be (re)used in the
    *                              disconnected state.
+   * @param inExceptions          A function that can transform exceptions to
+   *                              responses
    */
 
   protected HBClientSynchronousAbstract(
-    final HBClientHandlerType<X, C, R, RS, RF, E, CR> inDisconnectedHandler)
+    final HBClientHandlerType<X, C, R, RS, RF, E, CR> inDisconnectedHandler,
+    final HBClientExceptionTransformerType<RF> inExceptions)
   {
     this.disconnectedHandler =
       Objects.requireNonNull(inDisconnectedHandler, "disconnectedHandler");
+    this.exceptions =
+      Objects.requireNonNull(inExceptions, "inExceptions");
 
     this.executor =
       new HBDirectExecutor();
@@ -105,14 +110,14 @@ public abstract class HBClientSynchronousAbstract<
     this.stateLock =
       new Object();
     this.stateNow =
-      CLIENT_DISCONNECTED;
+      new HBStateDisconnected<>();
     this.handler =
       this.disconnectedHandler;
   }
 
   private static void logStateChange(
-    final HBState oldState,
-    final HBState newState)
+    final HBStateType<?, ?, ?, ?> oldState,
+    final HBStateType<?, ?, ?, ?> newState)
   {
     if (LOG.isTraceEnabled()) {
       LOG.trace("state {} -> {}", oldState, newState);
@@ -122,7 +127,7 @@ public abstract class HBClientSynchronousAbstract<
   @Override
   public final boolean isClosed()
   {
-    return this.stateNow() == CLIENT_CLOSED;
+    return this.stateNow() instanceof HBStateClosed;
   }
 
   @Override
@@ -138,13 +143,13 @@ public abstract class HBClientSynchronousAbstract<
   }
 
   @Override
-  public final Flow.Publisher<HBState> state()
+  public final Flow.Publisher<HBStateType<C, R, RF, CR>> state()
   {
     return this.statePublisher;
   }
 
   @Override
-  public final HBState stateNow()
+  public final HBStateType<C, R, RF, CR> stateNow()
   {
     synchronized (this.stateLock) {
       return this.stateNow;
@@ -157,14 +162,14 @@ public abstract class HBClientSynchronousAbstract<
   {
     this.checkNotClosingOrClosed();
 
-    this.publishState(CLIENT_POLLING_EVENTS);
+    this.publishState(new HBStatePollingEvents<>());
 
     try {
       this.handler.onPollEvents().forEach(this.eventPublisher::submit);
       LOG.debug("polling events succeeded");
-      this.publishState(CLIENT_POLLING_EVENTS_SUCCEEDED);
+      this.publishState(new HBStatePollingEventsSucceeded<>());
     } catch (final Exception e) {
-      this.publishState(CLIENT_POLLING_EVENTS_FAILED);
+      this.publishState(new HBStatePollingEventsFailed<>());
       LOG.debug("polling events failed");
       throw e;
     }
@@ -179,39 +184,36 @@ public abstract class HBClientSynchronousAbstract<
     this.checkNotClosingOrClosed();
 
     this.disconnect();
-    this.publishState(CLIENT_EXECUTING_LOGIN);
+    this.publishState(new HBStateExecutingLogin<>(credentials));
 
     final HBResultType<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> result;
     try {
       result = this.handler.onExecuteLogin(credentials);
-    } catch (final Exception e) {
-      this.publishState(CLIENT_EXECUTING_LOGIN_FAILED);
+    } catch (final Throwable e) {
+      this.publishState(
+        new HBStateExecutingLoginFailed<>(this.exceptions.ofException(e))
+      );
       LOG.debug("login failed");
       throw e;
     }
 
     Objects.requireNonNull(result, "result");
 
-    if (result instanceof final HBResultSuccess<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> success) {
-      this.handler = success.result().newHandler();
-      this.publishState(CLIENT_EXECUTING_LOGIN_SUCCEEDED);
-      this.publishState(CLIENT_CONNECTED);
+    if (result instanceof HBResultSuccess<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> success) {
+      final var r = success.result();
+      this.handler = r.newHandler();
+      this.publishState(new HBStateExecutingLoginSucceeded<>(r.loginResponse()));
+      this.publishState(new HBStateConnected<>());
       LOG.debug("login succeeded");
-      this.onLoginExecuteSucceeded(
-        credentials,
-        success.result().loginResponse()
-      );
       return success.map(HBClientNewHandler::loginResponse);
     }
-    if (result instanceof final HBResultFailure<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> failure) {
-      this.publishState(CLIENT_EXECUTING_LOGIN_FAILED);
+
+    if (result instanceof HBResultFailure<HBClientNewHandler<X, C, R, RS, RF, E, CR>, RF> failure) {
+      this.publishState(new HBStateExecutingLoginFailed<>(failure.result()));
       LOG.debug("login failed");
-      this.onLoginExecuteFailed(
-        credentials,
-        failure.result()
-      );
       return failure.cast();
     }
+
     throw new UnreachableCodeException();
   }
 
@@ -223,19 +225,19 @@ public abstract class HBClientSynchronousAbstract<
   {
     synchronized (this.stateLock) {
       final var state = this.stateNow();
-      if (state == CLIENT_CLOSING || state == CLIENT_CLOSED) {
+      if (state.isClosingOrClosed()) {
         throw new IllegalStateException("Client is closed!");
       }
     }
   }
 
   private void publishState(
-    final HBState newState)
+    final HBStateType<C, R, RF, CR> newState)
   {
-    final HBState stateThen;
+    final HBStateType<C, R, RF, CR> stateThen;
     synchronized (this.stateLock) {
       stateThen = this.stateNow();
-      if (stateThen == CLIENT_CLOSED) {
+      if (stateThen instanceof HBStateClosed) {
         return;
       }
     }
@@ -255,83 +257,40 @@ public abstract class HBClientSynchronousAbstract<
     Objects.requireNonNull(command, "command");
     this.checkNotClosingOrClosed();
 
-    this.publishState(CLIENT_EXECUTING_COMMAND);
+    this.publishState(new HBStateExecutingCommand<>(command));
 
     final HBResultType<RS, RF> result;
     try {
       result = this.handler.onExecuteCommand(command);
-    } catch (final Exception e) {
-      this.publishState(CLIENT_EXECUTING_COMMAND_FAILED);
+    } catch (final Throwable e) {
+      this.publishState(
+        new HBStateExecutingCommandFailed<>(
+          command,
+          this.exceptions.ofException(e)
+        )
+      );
       LOG.debug("command failed");
       throw e;
     }
 
     Objects.requireNonNull(result, "result");
 
-    if (result.isSuccess()) {
-      this.publishState(CLIENT_EXECUTING_COMMAND_SUCCEEDED);
+    if (result instanceof HBResultSuccess<RS, RF> success) {
+      this.publishState(
+        new HBStateExecutingCommandSucceeded<>(command, success.result())
+      );
       LOG.debug("command succeeded");
-      this.onCommandExecuteSucceeded(
-        command,
-        ((HBResultSuccess<RS, RF>) result).result()
+    }
+
+    if (result instanceof HBResultFailure<RS, RF> failure) {
+      this.publishState(
+        new HBStateExecutingCommandFailed<>(command, failure.result())
       );
-    } else {
-      this.publishState(CLIENT_EXECUTING_COMMAND_FAILED);
       LOG.debug("command failed");
-      this.onCommandExecuteFailed(
-        command,
-        ((HBResultFailure<RS, RF>) result).result()
-      );
     }
 
     return result;
   }
-
-  /**
-   * A method called when a command is executed successfully.
-   *
-   * @param command The command
-   * @param result  The result
-   */
-
-  protected abstract void onCommandExecuteSucceeded(
-    C command,
-    RS result
-  );
-
-  /**
-   * A method called when a command fails.
-   *
-   * @param command The command
-   * @param result  The result
-   */
-
-  protected abstract void onCommandExecuteFailed(
-    C command,
-    RF result
-  );
-
-  /**
-   * A method called when a login attempt completes successfully.
-   *
-   * @param credentials The credentials
-   * @param result      The result
-   */
-
-  protected abstract void onLoginExecuteSucceeded(
-    CR credentials,
-    RS result);
-
-  /**
-   * A method called when a login attempt fails.
-   *
-   * @param credentials The credentials
-   * @param result      The result
-   */
-
-  protected abstract void onLoginExecuteFailed(
-    CR credentials,
-    RF result);
 
   @Override
   public final void disconnect()
@@ -344,7 +303,7 @@ public abstract class HBClientSynchronousAbstract<
         this.handler.onDisconnect();
       } finally {
         this.handler = this.disconnectedHandler;
-        this.publishState(CLIENT_DISCONNECTED);
+        this.publishState(new HBStateDisconnected<>());
       }
     }
   }
@@ -371,7 +330,7 @@ public abstract class HBClientSynchronousAbstract<
    * @return The client state publisher
    */
 
-  protected final SubmissionPublisher<HBState> statePublisher()
+  protected final SubmissionPublisher<HBStateType<C, R, RF, CR>> statePublisher()
   {
     return this.statePublisher;
   }
@@ -386,12 +345,12 @@ public abstract class HBClientSynchronousAbstract<
       if (state.isClosingOrClosed()) {
         return;
       }
-      this.stateNow = CLIENT_CLOSING;
+      this.stateNow = new HBStateClosing<>();
     }
 
     try {
       LOG.trace("close starting");
-      this.statePublisher.submit(CLIENT_CLOSED);
+      this.statePublisher.submit(new HBStateClosed<>());
 
       try {
         this.statePublisher.close();
@@ -400,9 +359,9 @@ public abstract class HBClientSynchronousAbstract<
       }
     } finally {
       synchronized (this.stateLock) {
-        this.stateNow = CLIENT_CLOSED;
+        this.stateNow = new HBStateClosed<>();
       }
-      logStateChange(CLIENT_CLOSING, CLIENT_CLOSED);
+      logStateChange(new HBStateClosing<>(), new HBStateClosed<>());
       LOG.trace("close completed");
     }
   }

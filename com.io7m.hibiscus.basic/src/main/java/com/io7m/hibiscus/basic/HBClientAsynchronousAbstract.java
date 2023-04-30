@@ -23,7 +23,7 @@ import com.io7m.hibiscus.api.HBCredentialsType;
 import com.io7m.hibiscus.api.HBEventType;
 import com.io7m.hibiscus.api.HBResponseType;
 import com.io7m.hibiscus.api.HBResultType;
-import com.io7m.hibiscus.api.HBState;
+import com.io7m.hibiscus.api.HBStateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,13 +120,13 @@ public abstract class HBClientAsynchronousAbstract<
   }
 
   @Override
-  public final Flow.Publisher<HBState> state()
+  public final Flow.Publisher<HBStateType<C, R, RF, CR>> state()
   {
     return this.delegate.state();
   }
 
   @Override
-  public final HBState stateNow()
+  public final HBStateType<C, R, RF, CR> stateNow()
   {
     return this.delegate.stateNow();
   }

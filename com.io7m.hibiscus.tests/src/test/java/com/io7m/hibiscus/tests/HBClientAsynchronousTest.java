@@ -24,7 +24,19 @@ import com.io7m.hibiscus.api.HBEventType;
 import com.io7m.hibiscus.api.HBResponseType;
 import com.io7m.hibiscus.api.HBResultFailure;
 import com.io7m.hibiscus.api.HBResultSuccess;
-import com.io7m.hibiscus.api.HBState;
+import com.io7m.hibiscus.api.HBStateType;
+import com.io7m.hibiscus.api.HBStateType.HBStateClosed;
+import com.io7m.hibiscus.api.HBStateType.HBStateConnected;
+import com.io7m.hibiscus.api.HBStateType.HBStateDisconnected;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingCommand;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingCommandFailed;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingCommandSucceeded;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLogin;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLoginFailed;
+import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLoginSucceeded;
+import com.io7m.hibiscus.api.HBStateType.HBStatePollingEvents;
+import com.io7m.hibiscus.api.HBStateType.HBStatePollingEventsFailed;
+import com.io7m.hibiscus.api.HBStateType.HBStatePollingEventsSucceeded;
 import com.io7m.hibiscus.basic.HBClientAsynchronous;
 import com.io7m.hibiscus.basic.HBClientHandlerType;
 import com.io7m.hibiscus.basic.HBClientNewHandler;
@@ -45,18 +57,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static com.io7m.hibiscus.api.HBState.CLIENT_CLOSED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_CONNECTED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_DISCONNECTED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND_FAILED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_COMMAND_SUCCEEDED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_LOGIN;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_LOGIN_FAILED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_EXECUTING_LOGIN_SUCCEEDED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS;
-import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS_FAILED;
-import static com.io7m.hibiscus.api.HBState.CLIENT_POLLING_EVENTS_SUCCEEDED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -131,7 +131,7 @@ public final class HBClientAsynchronousTest
     this.credentials =
       mock(HBCredentialsType.class);
     this.delegate =
-      new HBClientSynchronous<>(this.handler0);
+      new HBClientSynchronous<>(this.handler0, HBClientAsynchronousTest::ofException);
 
     this.failureCommand =
       new HBResultFailure<>(mock(HBResponseType.class));
@@ -146,6 +146,12 @@ public final class HBClientAsynchronousTest
           this.handler1,
           mock(HBResponseType.class)
         ));
+  }
+
+  private static <RF extends HBResponseType> RF ofException(
+    final Throwable throwable)
+  {
+    return mock();
   }
 
   @AfterEach
@@ -167,7 +173,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -178,7 +184,7 @@ public final class HBClientAsynchronousTest
       when(this.handler0.onExecuteLogin(any()))
         .thenReturn(this.failureLogin);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result =
@@ -186,14 +192,14 @@ public final class HBClientAsynchronousTest
           .get();
 
       assertFalse(result.isSuccess());
-      assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
+      assertInstanceOf(HBStateExecutingLoginFailed.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   private void waitForClose(
@@ -237,7 +243,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -248,7 +254,7 @@ public final class HBClientAsynchronousTest
       when(this.handler0.onExecuteLogin(any()))
         .thenThrow(new NullPointerException("Null!"));
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var future =
@@ -257,14 +263,14 @@ public final class HBClientAsynchronousTest
         future.handleAsync((i, x) -> x);
 
       assertInstanceOf(NullPointerException.class, result.get());
-      assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
+      assertInstanceOf(HBStateExecutingLoginFailed.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -278,7 +284,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -289,7 +295,7 @@ public final class HBClientAsynchronousTest
       when(this.handler0.onExecuteLogin(any()))
         .thenReturn(this.successLogin);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result =
@@ -297,15 +303,15 @@ public final class HBClientAsynchronousTest
           .get();
 
       assertTrue(result.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -319,7 +325,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -330,7 +336,7 @@ public final class HBClientAsynchronousTest
       when(this.handler0.onExecuteLogin(any()))
         .thenReturn(this.failureLogin);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var ex =
@@ -346,14 +352,14 @@ public final class HBClientAsynchronousTest
         this.failureLogin.result().toString(),
         ex.getCause().getMessage()
       );
-      assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, client.stateNow());
+      assertInstanceOf(HBStateExecutingLoginFailed.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -367,7 +373,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -378,21 +384,21 @@ public final class HBClientAsynchronousTest
       when(this.handler0.onExecuteLogin(any()))
         .thenReturn(this.successLogin);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       client.loginAsyncOrElseThrow(this.credentials, HExampleException::new)
         .get();
 
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -406,7 +412,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -419,30 +425,30 @@ public final class HBClientAsynchronousTest
       when(this.handler1.onExecuteCommand(any()))
         .thenReturn(this.failureCommand);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       final var result1 =
         client.executeAsync(mock()).get();
 
       assertFalse(result1.isSuccess());
-      assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
+      assertInstanceOf(HBStateExecutingCommandFailed.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommand.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommandFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -456,7 +462,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -469,14 +475,14 @@ public final class HBClientAsynchronousTest
       when(this.handler1.onExecuteCommand(any()))
         .thenReturn(this.failureCommand);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       final var ex =
         assertThrows(ExecutionException.class, () -> {
@@ -489,17 +495,17 @@ public final class HBClientAsynchronousTest
         ex.getCause().getMessage()
       );
 
-      assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
+      assertInstanceOf(HBStateExecutingCommandFailed.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommand.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommandFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -513,7 +519,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -526,30 +532,32 @@ public final class HBClientAsynchronousTest
       when(this.handler1.onExecuteCommand(any()))
         .thenReturn(this.successCommand);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       final var result1 =
         client.executeAsync(mock()).get();
 
       assertTrue(result1.isSuccess());
-      assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
+      assertInstanceOf(
+        HBStateExecutingCommandSucceeded.class,
+        client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommand.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommandSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
 
     assertThrows(IllegalStateException.class, () -> {
       leakedClient.loginAsync(mock());
@@ -570,7 +578,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -583,30 +591,32 @@ public final class HBClientAsynchronousTest
       when(this.handler1.onExecuteCommand(any()))
         .thenReturn(this.successCommand);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       final var result1 =
         client.executeAsyncOrElseThrow(mock(), HExampleException::new)
           .get();
 
-      assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, client.stateNow());
+      assertInstanceOf(
+        HBStateExecutingCommandSucceeded.class,
+        client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommand.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommandSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
 
     assertThrows(IllegalStateException.class, () -> {
       leakedClient.loginAsync(mock());
@@ -627,7 +637,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -640,14 +650,14 @@ public final class HBClientAsynchronousTest
       when(this.handler1.onExecuteCommand(any()))
         .thenThrow(new NullPointerException("Null!"));
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       final var future =
         client.executeAsync(mock());
@@ -655,19 +665,19 @@ public final class HBClientAsynchronousTest
         future.handleAsync((i, x) -> x);
 
       assertInstanceOf(NullPointerException.class, result1.get());
-      assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, client.stateNow());
+      assertInstanceOf(HBStateExecutingCommandFailed.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_COMMAND_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, states.remove(0));
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommand.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingCommandFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, states.remove(0));
 
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -681,7 +691,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -689,13 +699,13 @@ public final class HBClientAsynchronousTest
       client.state()
         .subscribe(new HPerpetualSubscriber<>(states::add));
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -709,7 +719,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -720,7 +730,7 @@ public final class HBClientAsynchronousTest
       when(this.handler0.onExecuteLogin(any()))
         .thenReturn(this.successLogin);
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result =
@@ -728,20 +738,20 @@ public final class HBClientAsynchronousTest
           .get();
 
       assertTrue(result.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       client.disconnectAsync()
         .get();
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -755,7 +765,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
       leakedClient = client;
@@ -769,7 +779,7 @@ public final class HBClientAsynchronousTest
       doThrow(new NullPointerException("Null!"))
         .when(this.handler1).onDisconnect();
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result =
@@ -777,7 +787,7 @@ public final class HBClientAsynchronousTest
           .get();
 
       assertTrue(result.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       final var future =
         client.disconnectAsync();
@@ -785,16 +795,16 @@ public final class HBClientAsynchronousTest
         future.handleAsync((i, x) -> x);
 
       assertInstanceOf(NullPointerException.class, result1.get());
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_DISCONNECTED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStateDisconnected.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
   }
 
   /**
@@ -809,7 +819,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
     final List<HBEventType> events;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
@@ -828,17 +838,17 @@ public final class HBClientAsynchronousTest
           new HExampleEvent(2)
         ));
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       client.pollEvents().get();
-      assertEquals(CLIENT_POLLING_EVENTS_SUCCEEDED, client.stateNow());
+      assertInstanceOf(HBStatePollingEventsSucceeded.class, client.stateNow());
 
       assertEquals(
         List.of(
@@ -852,12 +862,12 @@ public final class HBClientAsynchronousTest
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_POLLING_EVENTS, states.remove(0));
-    assertEquals(CLIENT_POLLING_EVENTS_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStatePollingEvents.class, states.remove(0));
+    assertInstanceOf(HBStatePollingEventsSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
 
     assertThrows(IllegalStateException.class, () -> {
       leakedClient.loginAsync(mock());
@@ -879,7 +889,7 @@ public final class HBClientAsynchronousTest
     throws Exception
   {
     final HBClientAsynchronous<?, ?, ?, ?, ?, ?, ?> leakedClient;
-    final List<HBState> states;
+    final List<HBStateType<?, ?, ?, ?>> states;
     final List<HBEventType> events;
 
     try (var client = new HBClientAsynchronous<>(this.delegate, "t")) {
@@ -895,28 +905,28 @@ public final class HBClientAsynchronousTest
         .when(this.handler1)
         .onPollEvents();
 
-      assertEquals(CLIENT_DISCONNECTED, client.stateNow());
+      assertInstanceOf(HBStateDisconnected.class, client.stateNow());
       assertFalse(client.isConnected());
 
       final var result0 =
         client.loginAsync(this.credentials).get();
 
       assertTrue(result0.isSuccess());
-      assertEquals(CLIENT_CONNECTED, client.stateNow());
+      assertInstanceOf(HBStateConnected.class, client.stateNow());
 
       assertThrows(ExecutionException.class, () -> client.pollEvents().get());
-      assertEquals(CLIENT_POLLING_EVENTS_FAILED, client.stateNow());
+      assertInstanceOf(HBStatePollingEventsFailed.class, client.stateNow());
       assertEquals(List.of(), events);
     }
 
     this.waitForClose(leakedClient);
 
-    assertEquals(CLIENT_EXECUTING_LOGIN, states.remove(0));
-    assertEquals(CLIENT_EXECUTING_LOGIN_SUCCEEDED, states.remove(0));
-    assertEquals(CLIENT_CONNECTED, states.remove(0));
-    assertEquals(CLIENT_POLLING_EVENTS, states.remove(0));
-    assertEquals(CLIENT_POLLING_EVENTS_FAILED, states.remove(0));
-    assertEquals(CLIENT_CLOSED, leakedClient.stateNow());
+    assertInstanceOf(HBStateExecutingLogin.class, states.remove(0));
+    assertInstanceOf(HBStateExecutingLoginSucceeded.class, states.remove(0));
+    assertInstanceOf(HBStateConnected.class, states.remove(0));
+    assertInstanceOf(HBStatePollingEvents.class, states.remove(0));
+    assertInstanceOf(HBStatePollingEventsFailed.class, states.remove(0));
+    assertInstanceOf(HBStateClosed.class, leakedClient.stateNow());
 
     assertThrows(IllegalStateException.class, () -> {
       leakedClient.loginAsync(mock());

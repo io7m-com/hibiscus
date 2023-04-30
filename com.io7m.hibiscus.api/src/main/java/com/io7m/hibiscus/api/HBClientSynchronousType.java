@@ -39,7 +39,7 @@ public interface HBClientSynchronousType<
   E extends HBEventType,
   CR extends HBCredentialsType>
   extends HBClientSynchronousOperationsType<X, C, R, RS, RF, CR>,
-  HBClientStatusType<E>,
+  HBClientStatusType<C, R, RF, E, CR>,
   HBClientCloseableType<X>
 {
   /**
