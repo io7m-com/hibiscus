@@ -46,8 +46,11 @@ public interface HBClientSynchronousFactoryType<
    *
    * @param configuration The client configuration
    *
+   * @throws X If a client cannot be created
+   *
    * @return A new client
    */
 
-  L openSynchronousClient(G configuration);
+  L openSynchronousClient(G configuration)
+    throws X;
 }

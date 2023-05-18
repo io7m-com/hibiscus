@@ -47,7 +47,10 @@ public interface HBClientAsynchronousFactoryType<
    * @param configuration The client configuration
    *
    * @return A new client
+   *
+   * @throws X If a client cannot be created
    */
 
-  L openAsynchronousClient(G configuration);
+  L openAsynchronousClient(G configuration)
+    throws X;
 }
