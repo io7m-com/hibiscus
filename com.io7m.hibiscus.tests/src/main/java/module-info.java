@@ -16,14 +16,21 @@
 
 open module com.io7m.hibiscus.tests
 {
-  requires transitive com.io7m.hibiscus.api;
-  requires transitive com.io7m.hibiscus.basic;
-
-  requires java.net.http;
-  requires org.slf4j;
-
   requires transitive org.junit.jupiter.api;
   requires transitive org.junit.jupiter.engine;
   requires transitive org.junit.platform.commons;
   requires transitive org.junit.platform.engine;
+
+  requires com.io7m.hibiscus.api;
+  requires com.io7m.hibiscus.basic;
+
+  requires com.io7m.quixote.core;
+  requires java.net.http;
+  requires net.bytebuddy.agent;
+  requires net.bytebuddy;
+  requires net.jqwik.api;
+  requires org.mockito;
+  requires org.slf4j;
+
+  exports com.io7m.hibiscus.tests;
 }
