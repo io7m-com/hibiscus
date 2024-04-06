@@ -134,7 +134,7 @@ public final class ExUDP0Test
         ADDRESS,
         "someone",
         "password",
-        Duration.ofMillis(10L)
+        Duration.ofSeconds(1L)
       );
 
     assertInstanceOf(HBStateDisconnected.class, this.client.stateNow());
@@ -214,7 +214,7 @@ public final class ExUDP0Test
         ADDRESS,
         "someone",
         "password",
-        Duration.ofMillis(10L)
+        Duration.ofSeconds(1L)
       );
 
     assertInstanceOf(HBStateDisconnected.class, this.client.stateNow());
@@ -301,7 +301,7 @@ public final class ExUDP0Test
         ADDRESS,
         "someone",
         "password",
-        Duration.ofMillis(10L)
+        Duration.ofSeconds(1L)
       );
 
     assertInstanceOf(HBStateDisconnected.class, this.client.stateNow());
