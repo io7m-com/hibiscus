@@ -64,15 +64,12 @@ public final class EHTTP0Server implements Closeable
   }
 
   public void start()
+    throws InterruptedException
   {
     this.webServer.start();
 
     while (!this.webServer.isRunning()) {
-      try {
-        Thread.sleep(1L);
-      } catch (final InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
+      Thread.sleep(100L);
     }
   }
 

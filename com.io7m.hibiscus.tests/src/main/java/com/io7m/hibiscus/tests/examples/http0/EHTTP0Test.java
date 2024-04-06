@@ -63,7 +63,7 @@ public final class EHTTP0Test
 
   @BeforeAll
   public static void setupOnce()
-    throws IOException
+    throws Exception
   {
     ADDRESS =
       new InetSocketAddress("localhost", PORT);
