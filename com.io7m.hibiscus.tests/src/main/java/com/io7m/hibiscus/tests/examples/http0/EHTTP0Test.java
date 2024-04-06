@@ -45,12 +45,16 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 @Timeout(value = 5_000L, unit = TimeUnit.SECONDS)
 public final class EHTTP0Test
 {
   private static final Logger LOG =
     LoggerFactory.getLogger(EHTTP0Test.class);
+
+  private static final Duration STARTUP_TIMEOUT =
+    Duration.ofSeconds(5L);
 
   private static final int PORT = 47000;
   private static EHTTP0Server SERVER;
@@ -70,7 +74,9 @@ public final class EHTTP0Test
     SERVER =
       new EHTTP0Server(ADDRESS);
 
-    SERVER.start();
+    assertTimeoutPreemptively(STARTUP_TIMEOUT, () -> {
+      SERVER.start();
+    });
   }
 
   @AfterAll
