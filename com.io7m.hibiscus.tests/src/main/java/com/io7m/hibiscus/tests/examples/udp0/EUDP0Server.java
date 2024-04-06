@@ -26,6 +26,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
@@ -53,9 +54,11 @@ public final class EUDP0Server implements Closeable
 
   public void start(
     final CountDownLatch bindLatch)
-    throws IOException
+    throws SocketException
   {
-    this.socket = new DatagramSocket(this.address);
+    this.socket = new DatagramSocket(null);
+    this.socket.setReuseAddress(true);
+    this.socket.bind(this.address);
     bindLatch.countDown();
 
     final var receivePacketBuffer =
@@ -91,7 +94,7 @@ public final class EUDP0Server implements Closeable
 
         this.clients.put(source, existing);
         existing.onReceive(message);
-      } catch (final EUDP0Exception e) {
+      } catch (final Exception e) {
         LOG.error("I/O: ", e);
       }
     }
@@ -130,6 +133,8 @@ public final class EUDP0Server implements Closeable
       final EUDP0MessageType message)
       throws EUDP0Exception
     {
+      LOG.debug("onReceive: {}", message);
+
       switch (message) {
         case final EUDP0CommandType c -> {
           switch (c) {
@@ -244,6 +249,8 @@ public final class EUDP0Server implements Closeable
     final SocketAddress target)
     throws EUDP0Exception
   {
+    LOG.debug("Send: {} {}", message, target);
+
     final var msgBytes =
       EUDP0Messages.toBytes(message);
     final var packet =
