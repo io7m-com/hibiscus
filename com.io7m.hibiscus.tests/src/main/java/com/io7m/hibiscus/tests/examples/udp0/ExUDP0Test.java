@@ -30,6 +30,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,8 +93,11 @@ public final class ExUDP0Test
   }
   
   @BeforeEach
-  public void setup()
+  public void setup(
+    final TestInfo info)
   {
+    LOG.debug("setup: Test: {}", info.getDisplayName());
+
     this.resources =
       CloseableCollection.create();
 
@@ -112,9 +116,12 @@ public final class ExUDP0Test
   }
 
   @AfterEach
-  public void tearDown()
+  public void tearDown(
+    final TestInfo info)
     throws Exception
   {
+    LOG.debug("tearDown: Test: {}", info.getDisplayName());
+
     this.resources.close();
   }
 
