@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,14 +14,23 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
- * RPC Client API Specification (Test suite)
- */
 
-open module com.io7m.hibiscus.tests
+package com.io7m.hibiscus.examples.udp0;
+
+import com.io7m.hibiscus.basic.HBClientAbstract;
+
+public final class EUDP0Client
+  extends HBClientAbstract<EUDP0MessageType, EUDP0ConnectionParameters, EUDP0Exception>
+  implements EUDP0ClientType
 {
-  requires transitive org.junit.jupiter.api;
-  requires transitive org.junit.jupiter.engine;
-  requires transitive org.junit.platform.commons;
-  requires transitive org.junit.platform.engine;
+  private EUDP0Client()
+  {
+    super(new EUDP0ClientHandlerDisconnected());
+  }
+
+  public static EUDP0ClientType create(
+    final EUDP0Configuration configuration)
+  {
+    return new EUDP0Client();
+  }
 }

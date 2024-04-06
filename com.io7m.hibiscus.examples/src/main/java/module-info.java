@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,13 +15,23 @@
  */
 
 /**
- * RPC Client API Specification (Test suite)
+ * RPC Client API Specification (Examples)
  */
 
-open module com.io7m.hibiscus.tests
+module com.io7m.hibiscus.examples
 {
-  requires transitive org.junit.jupiter.api;
-  requires transitive org.junit.jupiter.engine;
-  requires transitive org.junit.platform.commons;
-  requires transitive org.junit.platform.engine;
+  requires static org.osgi.annotation.versioning;
+  requires static org.osgi.annotation.bundle;
+
+  requires com.io7m.hibiscus.api;
+  requires com.io7m.hibiscus.basic;
+
+  requires com.io7m.jmulticlose.core;
+  requires io.helidon.webserver;
+  requires java.net.http;
+  requires org.slf4j;
+
+  exports com.io7m.hibiscus.examples.http0;
+  exports com.io7m.hibiscus.examples.tcp0;
+  exports com.io7m.hibiscus.examples.udp0;
 }

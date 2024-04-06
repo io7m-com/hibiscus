@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,14 +14,29 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
- * RPC Client API Specification (Test suite)
- */
 
-open module com.io7m.hibiscus.tests
+package com.io7m.hibiscus.examples.http0;
+
+import com.io7m.hibiscus.api.HBMessageType;
+
+import java.util.Objects;
+import java.util.UUID;
+
+public sealed interface EHTTP0ResponseType
+  extends EHTTP0MessageType
+  permits EHTTP0ResponseFailure,
+  EHTTP0ResponseOK
 {
-  requires transitive org.junit.jupiter.api;
-  requires transitive org.junit.jupiter.engine;
-  requires transitive org.junit.platform.commons;
-  requires transitive org.junit.platform.engine;
+  UUID correlationId();
+
+  @Override
+  default boolean isResponseFor(
+    final HBMessageType message)
+  {
+    Objects.requireNonNull(message, "message");
+    if (message instanceof final EHTTP0MessageType m) {
+      return Objects.equals(this.correlationId(), m.messageId());
+    }
+    return false;
+  }
 }

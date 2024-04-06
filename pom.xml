@@ -23,6 +23,7 @@
   <modules>
     <module>com.io7m.hibiscus.api</module>
     <module>com.io7m.hibiscus.basic</module>
+    <module>com.io7m.hibiscus.examples</module>
     <module>com.io7m.hibiscus.tests</module>
   </modules>
 

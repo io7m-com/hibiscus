@@ -81,18 +81,7 @@
       <artifactId>com.io7m.percentpass.extension</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>io.helidon.webserver</groupId>
-      <artifactId>helidon-webserver</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.helidon.http</groupId>
-      <artifactId>helidon-http</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.helidon.common</groupId>
-      <artifactId>helidon-common-tls</artifactId>
-    </dependency>
+
 
     <dependency>
       <groupId>org.osgi</groupId>

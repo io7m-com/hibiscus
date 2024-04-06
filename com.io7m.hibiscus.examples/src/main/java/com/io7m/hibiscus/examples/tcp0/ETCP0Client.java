@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,14 +14,23 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
- * RPC Client API Specification (Test suite)
- */
 
-open module com.io7m.hibiscus.tests
+package com.io7m.hibiscus.examples.tcp0;
+
+import com.io7m.hibiscus.basic.HBClientAbstract;
+
+public final class ETCP0Client
+  extends HBClientAbstract<ETCP0MessageType, ETCP0ConnectionParameters, ETCP0Exception>
+  implements ETCP0ClientType
 {
-  requires transitive org.junit.jupiter.api;
-  requires transitive org.junit.jupiter.engine;
-  requires transitive org.junit.platform.commons;
-  requires transitive org.junit.platform.engine;
+  private ETCP0Client()
+  {
+    super(new ETCP0ClientHandlerDisconnected());
+  }
+
+  public static ETCP0ClientType create(
+    final ETCP0Configuration configuration)
+  {
+    return new ETCP0Client();
+  }
 }

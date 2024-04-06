@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,14 +14,20 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-/**
- * RPC Client API Specification (Test suite)
- */
 
-open module com.io7m.hibiscus.tests
+package com.io7m.hibiscus.examples.http0;
+
+public final class EHTTP0Clients implements EHTTP0ClientFactoryType
 {
-  requires transitive org.junit.jupiter.api;
-  requires transitive org.junit.jupiter.engine;
-  requires transitive org.junit.platform.commons;
-  requires transitive org.junit.platform.engine;
+  public EHTTP0Clients()
+  {
+
+  }
+
+  @Override
+  public EHTTP0ClientType create(
+    final EHTTP0Configuration configuration)
+  {
+    return EHTTP0Client.create(configuration);
+  }
 }
