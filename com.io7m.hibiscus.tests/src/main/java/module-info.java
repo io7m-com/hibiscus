@@ -29,6 +29,7 @@ open module com.io7m.hibiscus.tests
   requires com.io7m.hibiscus.basic;
 
   requires com.io7m.jmulticlose.core;
+  requires com.io7m.percentpass.extension;
   requires com.io7m.quixote.core;
   requires io.helidon.webserver;
   requires java.net.http;
@@ -39,4 +40,7 @@ open module com.io7m.hibiscus.tests
   requires org.slf4j;
 
   exports com.io7m.hibiscus.tests;
+  exports com.io7m.hibiscus.tests.examples.http0;
+  exports com.io7m.hibiscus.tests.examples.tcp0;
+  exports com.io7m.hibiscus.tests.examples.udp0;
 }

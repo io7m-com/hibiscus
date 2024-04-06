@@ -48,10 +48,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Timeout(value = 5_000L, unit = TimeUnit.SECONDS)
-public final class ExTCP0Test
+public final class ETCP0Test
 {
   private static final Logger LOG =
-    LoggerFactory.getLogger(ExTCP0Test.class);
+    LoggerFactory.getLogger(ETCP0Test.class);
 
   private static final int PORT = 46000;
   private static ETCP0Server SERVER;

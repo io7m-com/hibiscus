@@ -76,6 +76,10 @@
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.io7m.percentpass</groupId>
+      <artifactId>com.io7m.percentpass.extension</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.helidon.webserver</groupId>
