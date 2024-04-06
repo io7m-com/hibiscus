@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 
 public final class EUDP0Server implements Closeable
 {
@@ -50,10 +51,12 @@ public final class EUDP0Server implements Closeable
       new ConcurrentHashMap<>();
   }
 
-  public void start()
+  public void start(
+    final CountDownLatch bindLatch)
     throws IOException
   {
     this.socket = new DatagramSocket(this.address);
+    bindLatch.countDown();
 
     final var receivePacketBuffer =
       new byte[512];

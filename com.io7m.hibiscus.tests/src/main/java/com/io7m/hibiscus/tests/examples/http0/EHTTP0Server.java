@@ -64,7 +64,6 @@ public final class EHTTP0Server implements Closeable
   }
 
   public void start()
-    throws IOException
   {
     this.webServer.start();
 

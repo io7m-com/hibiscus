@@ -39,6 +39,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
@@ -64,19 +65,23 @@ public final class ExUDP0Test
 
   @BeforeAll
   public static void setupOnce()
+    throws InterruptedException
   {
     ADDRESS =
       new InetSocketAddress("localhost", PORT);
     SERVER =
       new EUDP0Server(ADDRESS);
 
+    final var latch = new CountDownLatch(1);
     Thread.startVirtualThread(() -> {
       try {
-        SERVER.start();
+        SERVER.start(latch);
       } catch (final IOException e) {
         throw new RuntimeException(e);
       }
     });
+    latch.await(60L, TimeUnit.SECONDS);
+    LOG.debug("Server up!");
   }
 
   @AfterAll

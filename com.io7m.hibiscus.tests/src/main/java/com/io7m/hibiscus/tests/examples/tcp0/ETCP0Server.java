@@ -31,6 +31,7 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class ETCP0Server implements Closeable
@@ -54,11 +55,13 @@ public final class ETCP0Server implements Closeable
       new ServerSocket();
   }
 
-  public void start()
+  public void start(
+    final CountDownLatch bindLatch)
     throws IOException
   {
     this.socket.setReuseAddress(true);
     this.socket.bind(this.address);
+    bindLatch.countDown();
 
     while (true) {
       try {
