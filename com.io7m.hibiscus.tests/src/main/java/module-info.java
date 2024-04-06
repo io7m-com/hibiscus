@@ -14,6 +14,10 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/**
+ * RPC Client API Specification (Test suite)
+ */
+
 open module com.io7m.hibiscus.tests
 {
   requires transitive org.junit.jupiter.api;
@@ -24,7 +28,9 @@ open module com.io7m.hibiscus.tests
   requires com.io7m.hibiscus.api;
   requires com.io7m.hibiscus.basic;
 
+  requires com.io7m.jmulticlose.core;
   requires com.io7m.quixote.core;
+  requires io.helidon.webserver;
   requires java.net.http;
   requires net.bytebuddy.agent;
   requires net.bytebuddy;

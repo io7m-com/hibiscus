@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,36 +14,29 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package com.io7m.hibiscus.api;
 
-/**
- * A factory of clients.
- *
- * @param <C> The type of configurations
- * @param <M> The type of messages
- * @param <P> The type of connection parameters
- * @param <T> The type of clients
- * @param <X> the type of exceptions
- */
+package com.io7m.hibiscus.tests.examples.tcp0;
 
-public interface HBClientFactoryType<
-  C extends HBConfigurationType,
-  M extends HBMessageType,
-  P extends HBConnectionParametersType,
-  T extends HBClientType<M, P, X>,
-  X extends Exception>
+import com.io7m.hibiscus.api.HBMessageType;
+
+import java.util.Objects;
+import java.util.UUID;
+
+public sealed interface ETCP0ResponseType
+  extends ETCP0MessageType
+  permits ETCP0ResponseFailure,
+  ETCP0ResponseOK
 {
-  /**
-   * Create a new client.
-   *
-   * @param configuration The client configuration
-   *
-   * @return The new client
-   *
-   * @throws X On errors
-   */
+  UUID correlationId();
 
-  T create(
-    C configuration)
-    throws X;
+  @Override
+  default boolean isResponseFor(
+    final HBMessageType message)
+  {
+    Objects.requireNonNull(message, "message");
+    if (message instanceof final ETCP0MessageType m) {
+      return Objects.equals(this.correlationId(), m.messageId());
+    }
+    return false;
+  }
 }

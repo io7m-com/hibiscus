@@ -15,72 +15,37 @@
  */
 
 
-package com.io7m.hibiscus.basic;
-
-import com.io7m.hibiscus.api.HBClientCloseableType;
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBMessageType;
+package com.io7m.hibiscus.api;
 
 import java.time.Duration;
 import java.util.Optional;
 
 /**
- * The type of RPC client handlers.
+ * A connection abstraction that imposes connection-like semantics on a
+ * transport.
  *
  * @param <M> The type of messages
- * @param <P> The type of connection parameters
  * @param <X> the type of exceptions
+ *
+ * @see HBTransportType
  */
 
-public interface HBClientHandlerType<
+public interface HBConnectionType<
   M extends HBMessageType,
-  P extends HBConnectionParametersType,
   X extends Exception>
   extends HBClientCloseableType<X>
 {
-  /**
-   * Create a new connection to the server.
-   *
-   * @param parameters The connection parameters
-   *
-   * @return The connection result
-   */
-
-  HBConnectionResultType<M, P, X> doConnect(
-    P parameters);
-
-  /**
-   * @return If this handler is connected
-   */
-
-  boolean isConnected();
-
   /**
    * Send a message to the server without waiting for a response.
    *
    * @param message The message
    *
-   * @throws X On errors
+   * @throws X                    On errors
+   * @throws InterruptedException On interruption
    */
 
-  void doSend(
-    M message)
-    throws X;
-
-  /**
-   * Read a message from the connection, waiting at most {@code timeout} until
-   * giving up.
-   *
-   * @param timeout The timeout
-   *
-   * @return The message, if any
-   *
-   * @throws X On errors
-   */
-
-  Optional<M> doReceive(
-    Duration timeout)
-    throws X;
+  void send(M message)
+    throws X, InterruptedException;
 
   /**
    * Send a message to the server, waiting until the server sends a response
@@ -95,7 +60,21 @@ public interface HBClientHandlerType<
    * @throws InterruptedException On interruption
    */
 
-  <R extends M> R doAsk(
-    M message)
+  <R extends M> R ask(M message)
+    throws X, InterruptedException;
+
+  /**
+   * Read a message from the connection, waiting at most {@code timeout} until
+   * giving up.
+   *
+   * @param timeout The timeout
+   *
+   * @return The message, if any
+   *
+   * @throws X                    On errors
+   * @throws InterruptedException On interruption
+   */
+
+  Optional<M> receive(Duration timeout)
     throws X, InterruptedException;
 }

@@ -14,36 +14,14 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.hibiscus.api;
 
 /**
- * A factory of clients.
- *
- * @param <C> The type of configurations
- * @param <M> The type of messages
- * @param <P> The type of connection parameters
- * @param <T> The type of clients
- * @param <X> the type of exceptions
+ * The parameters required to connect to a server.
  */
 
-public interface HBClientFactoryType<
-  C extends HBConfigurationType,
-  M extends HBMessageType,
-  P extends HBConnectionParametersType,
-  T extends HBClientType<M, P, X>,
-  X extends Exception>
+public interface HBConnectionParametersType
 {
-  /**
-   * Create a new client.
-   *
-   * @param configuration The client configuration
-   *
-   * @return The new client
-   *
-   * @throws X On errors
-   */
 
-  T create(
-    C configuration)
-    throws X;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,36 +14,22 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package com.io7m.hibiscus.api;
 
-/**
- * A factory of clients.
- *
- * @param <C> The type of configurations
- * @param <M> The type of messages
- * @param <P> The type of connection parameters
- * @param <T> The type of clients
- * @param <X> the type of exceptions
- */
+package com.io7m.hibiscus.tests.examples.udp0;
 
-public interface HBClientFactoryType<
-  C extends HBConfigurationType,
-  M extends HBMessageType,
-  P extends HBConnectionParametersType,
-  T extends HBClientType<M, P, X>,
-  X extends Exception>
+import java.util.Objects;
+
+public final class EUDP0Exception extends Exception
 {
-  /**
-   * Create a new client.
-   *
-   * @param configuration The client configuration
-   *
-   * @return The new client
-   *
-   * @throws X On errors
-   */
+  public EUDP0Exception(
+    final Exception cause)
+  {
+    super(Objects.requireNonNull(cause, "cause"));
+  }
 
-  T create(
-    C configuration)
-    throws X;
+  public EUDP0Exception(
+    final String message)
+  {
+    super(Objects.requireNonNull(message, "message"));
+  }
 }

@@ -20,10 +20,20 @@ package com.io7m.hibiscus.api;
  * The base type of messages exchanged between the client and server.
  */
 
-public sealed interface HBMessageType
-  permits HBCommandType,
-  HBEventType,
-  HBResponseType
+public interface HBMessageType
 {
+  /**
+   * @param message The message
+   *
+   * @return {@code true} if this message is a response for the given message
+   */
 
+  boolean isResponseFor(
+    HBMessageType message);
+
+  /**
+   * @return {@code true} if this message represents an error
+   */
+
+  boolean isError();
 }

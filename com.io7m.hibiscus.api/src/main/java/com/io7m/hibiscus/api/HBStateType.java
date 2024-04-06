@@ -17,21 +17,13 @@
 package com.io7m.hibiscus.api;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * The client state.
- *
- * @param <C>  The type of commands
- * @param <R>  The type of responses
- * @param <RF> The type of error responses
- * @param <CR> The type of credentials
  */
 
-public sealed interface HBStateType<
-  C extends HBCommandType,
-  R extends HBResponseType,
-  RF extends R,
-  CR extends HBCredentialsType>
+public sealed interface HBStateType
 {
   /**
    * @return {@code true} if this state implies the client is either closing or
@@ -42,19 +34,10 @@ public sealed interface HBStateType<
 
   /**
    * The client is connected.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
    */
 
-  record HBStateConnected<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
+  record HBStateConnected()
+    implements HBStateType
   {
     @Override
     public String toString()
@@ -71,19 +54,10 @@ public sealed interface HBStateType<
 
   /**
    * The client is disconnected.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
    */
 
-  record HBStateDisconnected<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
+  record HBStateDisconnected()
+    implements HBStateType
   {
     @Override
     public String toString()
@@ -99,148 +73,13 @@ public sealed interface HBStateType<
   }
 
   /**
-   * The client is executing a command.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   * @param command The command
-   */
-
-  record HBStateExecutingCommand<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>(
-    C command)
-    implements HBStateType<C, R, RF, CR>
-  {
-    /**
-     * The client is executing a command.
-     */
-
-    public HBStateExecutingCommand
-    {
-      Objects.requireNonNull(command, "command");
-    }
-
-    @Override
-    public String toString()
-    {
-      return "EXECUTING_COMMAND";
-    }
-
-    @Override
-    public boolean isClosingOrClosed()
-    {
-      return false;
-    }
-  }
-
-  /**
-   * The client successfully executed a command.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   * @param command  The command
-   * @param response The response
-   */
-
-  record HBStateExecutingCommandSucceeded<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>(
-    C command,
-    R response)
-    implements HBStateType<C, R, RF, CR>
-  {
-    /**
-     * The client successfully executed a command.
-     */
-
-    public HBStateExecutingCommandSucceeded
-    {
-      Objects.requireNonNull(command, "command");
-      Objects.requireNonNull(response, "response");
-    }
-
-    @Override
-    public String toString()
-    {
-      return "EXECUTING_COMMAND_SUCCEEDED";
-    }
-
-    @Override
-    public boolean isClosingOrClosed()
-    {
-      return false;
-    }
-  }
-
-  /**
-   * The client failed to execute a command.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   * @param command  The command
-   * @param response The response
-   */
-
-  record HBStateExecutingCommandFailed<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>(
-    C command,
-    RF response)
-    implements HBStateType<C, R, RF, CR>
-  {
-    /**
-     * The client failed to execute a command.
-     */
-
-    public HBStateExecutingCommandFailed
-    {
-      Objects.requireNonNull(command, "command");
-      Objects.requireNonNull(response, "response");
-    }
-
-    @Override
-    public String toString()
-    {
-      return "EXECUTING_COMMAND_FAILED";
-    }
-
-    @Override
-    public boolean isClosingOrClosed()
-    {
-      return false;
-    }
-  }
-
-  /**
    * The client is authenticating with the server.
    *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
    * @param credentials The credentials
    */
 
-  record HBStateExecutingLogin<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>(
-    CR credentials)
-    implements HBStateType<C, R, RF, CR>
+  record HBStateExecutingLogin(HBConnectionParametersType credentials)
+    implements HBStateType
   {
     /**
      * The client is authenticating with the server.
@@ -254,7 +93,7 @@ public sealed interface HBStateType<
     @Override
     public String toString()
     {
-      return "EXECUTING_LOGIN";
+      return "CONNECTING";
     }
 
     @Override
@@ -267,26 +106,17 @@ public sealed interface HBStateType<
   /**
    * The client successfully authenticated with the server.
    *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
    * @param response The response
    */
 
-  record HBStateExecutingLoginSucceeded<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>(
-    R response)
-    implements HBStateType<C, R, RF, CR>
+  record HBStateConnectionSucceeded(HBMessageType response)
+    implements HBStateType
   {
     /**
      * The client successfully authenticated with the server.
      */
 
-    public HBStateExecutingLoginSucceeded
+    public HBStateConnectionSucceeded
     {
       Objects.requireNonNull(response, "response");
     }
@@ -294,7 +124,7 @@ public sealed interface HBStateType<
     @Override
     public String toString()
     {
-      return "EXECUTING_LOGIN_SUCCEEDED";
+      return "CONNECTION_SUCCEEDED";
     }
 
     @Override
@@ -305,123 +135,31 @@ public sealed interface HBStateType<
   }
 
   /**
-   * The client failed to authenticate with the server.
+   * The client failed to connect to the server.
    *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   * @param response The response
+   * @param exception The exception, if any
+   * @param response The response, if any
    */
 
-  record HBStateExecutingLoginFailed<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>(
-    RF response)
-    implements HBStateType<C, R, RF, CR>
+  record HBStateConnectionFailed(
+    Optional<Exception> exception,
+    Optional<HBMessageType> response)
+    implements HBStateType
   {
     /**
      * The client failed to authenticate with the server.
      */
 
-    public HBStateExecutingLoginFailed
+    public HBStateConnectionFailed
     {
       Objects.requireNonNull(response, "response");
+      Objects.requireNonNull(exception, "exception");
     }
 
     @Override
     public String toString()
     {
-      return "EXECUTING_LOGIN_FAILED";
-    }
-
-    @Override
-    public boolean isClosingOrClosed()
-    {
-      return false;
-    }
-  }
-
-  /**
-   * The client is polling the server for events.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   */
-
-  record HBStatePollingEvents<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
-  {
-    @Override
-    public String toString()
-    {
-      return "POLLING_EVENTS";
-    }
-
-    @Override
-    public boolean isClosingOrClosed()
-    {
-      return false;
-    }
-  }
-
-  /**
-   * The client successfully polled the server for events.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   */
-
-  record HBStatePollingEventsSucceeded<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
-  {
-    @Override
-    public String toString()
-    {
-      return "POLLING_EVENTS_SUCCEEDED";
-    }
-
-    @Override
-    public boolean isClosingOrClosed()
-    {
-      return false;
-    }
-  }
-
-  /**
-   * The client failed to poll the server for events.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
-   */
-
-  record HBStatePollingEventsFailed<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
-  {
-    @Override
-    public String toString()
-    {
-      return "POLLING_EVENTS_FAILED";
+      return "CONNECTION_FAILED";
     }
 
     @Override
@@ -433,19 +171,10 @@ public sealed interface HBStateType<
 
   /**
    * The client has been instructed to close.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
    */
 
-  record HBStateClosing<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
+  record HBStateClosing()
+    implements HBStateType
   {
     @Override
     public String toString()
@@ -462,19 +191,10 @@ public sealed interface HBStateType<
 
   /**
    * The client has been closed.
-   *
-   * @param <C>  The type of commands
-   * @param <R>  The type of responses
-   * @param <RF> The type of error responses
-   * @param <CR> The type of credentials
    */
 
-  record HBStateClosed<
-    C extends HBCommandType,
-    R extends HBResponseType,
-    RF extends R,
-    CR extends HBCredentialsType>()
-    implements HBStateType<C, R, RF, CR>
+  record HBStateClosed()
+    implements HBStateType
   {
     @Override
     public String toString()

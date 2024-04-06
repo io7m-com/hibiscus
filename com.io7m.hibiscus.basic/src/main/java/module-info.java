@@ -27,7 +27,6 @@ module com.io7m.hibiscus.basic
 
   requires com.io7m.jcip.annotations;
   requires org.slf4j;
-  requires com.io7m.junreachable.core;
 
   exports com.io7m.hibiscus.basic;
 }

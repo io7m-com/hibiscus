@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,36 +14,46 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
 package com.io7m.hibiscus.api;
 
+import java.time.Duration;
+import java.util.Optional;
+
 /**
- * A factory of clients.
+ * The type of transports for reading and writing messages.
  *
- * @param <C> The type of configurations
  * @param <M> The type of messages
- * @param <P> The type of connection parameters
- * @param <T> The type of clients
  * @param <X> the type of exceptions
  */
 
-public interface HBClientFactoryType<
-  C extends HBConfigurationType,
+public interface HBTransportType<
   M extends HBMessageType,
-  P extends HBConnectionParametersType,
-  T extends HBClientType<M, P, X>,
   X extends Exception>
+  extends HBClientCloseableType<X>
 {
   /**
-   * Create a new client.
+   * Take a message from the transport, if one is available.
    *
-   * @param configuration The client configuration
+   * @param timeout The timeout value
    *
-   * @return The new client
+   * @return The message
    *
    * @throws X On errors
    */
 
-  T create(
-    C configuration)
+  Optional<M> read(
+    Duration timeout)
+    throws X;
+
+  /**
+   * Place a message on the transport.
+   *
+   * @param message The message
+   *
+   * @throws X On errors
+   */
+
+  void write(M message)
     throws X;
 }

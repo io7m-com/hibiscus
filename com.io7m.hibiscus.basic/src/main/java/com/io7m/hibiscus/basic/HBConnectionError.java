@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,36 +14,39 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package com.io7m.hibiscus.api;
+
+package com.io7m.hibiscus.basic;
+
+import com.io7m.hibiscus.api.HBConnectionParametersType;
+import com.io7m.hibiscus.api.HBMessageType;
+
+import java.util.Objects;
 
 /**
- * A factory of clients.
+ * A connection attempt failed with an exception.
  *
- * @param <C> The type of configurations
- * @param <M> The type of messages
- * @param <P> The type of connection parameters
- * @param <T> The type of clients
- * @param <X> the type of exceptions
+ * @param exception The exception
+ * @param <M>       The type of messages
+ * @param <P>       The type of connection parameters
+ * @param <X>       the type of exceptions
  */
 
-public interface HBClientFactoryType<
-  C extends HBConfigurationType,
+public record HBConnectionError<
   M extends HBMessageType,
   P extends HBConnectionParametersType,
-  T extends HBClientType<M, P, X>,
-  X extends Exception>
+  X extends Exception>(
+  Exception exception)
+  implements HBConnectionResultType<M, P, X>
 {
+
   /**
-   * Create a new client.
+   * A connection attempt failed with an exception.
    *
-   * @param configuration The client configuration
-   *
-   * @return The new client
-   *
-   * @throws X On errors
+   * @param exception The exception
    */
 
-  T create(
-    C configuration)
-    throws X;
+  public HBConnectionError
+  {
+    Objects.requireNonNull(exception, "exception");
+  }
 }
