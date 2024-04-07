@@ -27,9 +27,4 @@ public sealed interface ETCP0MessageType
 {
   UUID messageId();
 
-  @Override
-  default boolean isError()
-  {
-    return false;
-  }
 }

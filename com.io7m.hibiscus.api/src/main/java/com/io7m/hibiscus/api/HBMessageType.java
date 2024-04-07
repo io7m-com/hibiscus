@@ -30,10 +30,4 @@ public interface HBMessageType
 
   boolean isResponseFor(
     HBMessageType message);
-
-  /**
-   * @return {@code true} if this message represents an error
-   */
-
-  boolean isError();
 }

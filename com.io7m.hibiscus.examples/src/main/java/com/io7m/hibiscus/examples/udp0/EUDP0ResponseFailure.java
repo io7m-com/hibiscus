@@ -25,9 +25,4 @@ public record EUDP0ResponseFailure(
   String message)
   implements EUDP0ResponseType
 {
-  @Override
-  public boolean isError()
-  {
-    return true;
-  }
 }

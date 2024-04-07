@@ -19,13 +19,18 @@ package com.io7m.hibiscus.examples.udp0;
 
 import com.io7m.hibiscus.basic.HBClientAbstract;
 
+import java.time.Clock;
+
 public final class EUDP0Client
   extends HBClientAbstract<EUDP0MessageType, EUDP0ConnectionParameters, EUDP0Exception>
   implements EUDP0ClientType
 {
   private EUDP0Client()
   {
-    super(new EUDP0ClientHandlerDisconnected());
+    super(new EUDP0ClientHandlerDisconnected(
+      Clock.systemUTC(),
+      1000
+    ), EUDP0Exception::new);
   }
 
   public static EUDP0ClientType create(

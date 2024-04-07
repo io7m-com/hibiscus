@@ -94,21 +94,17 @@ public final class ETCP0Transport
   @Override
   public Optional<ETCP0MessageType> read(
     final Duration timeout)
-    throws ETCP0Exception
+    throws ETCP0Exception, InterruptedException
   {
     Objects.requireNonNull(timeout, "timeout");
 
-    try {
-      if (this.isClosed()) {
-        throw new ETCP0Exception(new ClosedChannelException());
-      }
-      return Optional.ofNullable(
-        this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS)
-      );
-    } catch (final InterruptedException e) {
-      Thread.currentThread().interrupt();
-      return Optional.empty();
+    if (this.isClosed()) {
+      throw new ETCP0Exception(new ClosedChannelException());
     }
+
+    return Optional.ofNullable(
+      this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS)
+    );
   }
 
   @Override

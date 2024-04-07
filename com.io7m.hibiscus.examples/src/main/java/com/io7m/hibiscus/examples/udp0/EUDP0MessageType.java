@@ -27,9 +27,4 @@ public sealed interface EUDP0MessageType
 {
   UUID messageId();
 
-  @Override
-  default boolean isError()
-  {
-    return false;
-  }
 }

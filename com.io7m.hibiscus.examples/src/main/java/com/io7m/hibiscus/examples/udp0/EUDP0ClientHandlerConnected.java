@@ -18,6 +18,7 @@
 package com.io7m.hibiscus.examples.udp0;
 
 import com.io7m.hibiscus.api.HBConnection;
+import com.io7m.hibiscus.api.HBConnectionType;
 import com.io7m.hibiscus.basic.HBConnectionError;
 import com.io7m.hibiscus.basic.HBConnectionResultType;
 
@@ -50,15 +51,9 @@ public final class EUDP0ClientHandlerConnected
   }
 
   @Override
-  public boolean isConnected()
+  public HBConnectionType<EUDP0MessageType, EUDP0Exception> connection()
   {
-    return !this.connection.isClosed();
-  }
-
-  @Override
-  public boolean isClosed()
-  {
-    return this.connection.isClosed();
+    return this.connection;
   }
 
   @Override
@@ -66,29 +61,5 @@ public final class EUDP0ClientHandlerConnected
     throws EUDP0Exception
   {
     this.connection.close();
-  }
-
-  @Override
-  public void doSend(
-    final EUDP0MessageType message)
-    throws EUDP0Exception
-  {
-    this.connection.send(message);
-  }
-
-  @Override
-  public Optional<EUDP0MessageType> doReceive(
-    final Duration timeout)
-    throws EUDP0Exception
-  {
-    return this.connection.receive(timeout);
-  }
-
-  @Override
-  public <R extends EUDP0MessageType> R doAsk(
-    final EUDP0MessageType message)
-    throws EUDP0Exception, InterruptedException
-  {
-    return this.connection.ask(message);
   }
 }

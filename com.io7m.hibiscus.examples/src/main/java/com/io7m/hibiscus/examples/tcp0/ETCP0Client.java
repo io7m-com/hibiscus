@@ -19,13 +19,18 @@ package com.io7m.hibiscus.examples.tcp0;
 
 import com.io7m.hibiscus.basic.HBClientAbstract;
 
+import java.time.Clock;
+
 public final class ETCP0Client
   extends HBClientAbstract<ETCP0MessageType, ETCP0ConnectionParameters, ETCP0Exception>
   implements ETCP0ClientType
 {
   private ETCP0Client()
   {
-    super(new ETCP0ClientHandlerDisconnected());
+    super(new ETCP0ClientHandlerDisconnected(
+      Clock.systemUTC(),
+      1000
+    ), ETCP0Exception::new);
   }
 
   public static ETCP0ClientType create(

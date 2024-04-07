@@ -19,6 +19,7 @@ package com.io7m.hibiscus.api;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.Flow;
+import java.util.concurrent.TimeoutException;
 
 /**
  * The type of RPC clients.
@@ -78,6 +79,7 @@ public interface HBClientType<
    * to the message.
    *
    * @param message The message
+   * @param timeout The maximum timeout to wait for a response
    * @param <R>     The type of responses
    *
    * @return The response
@@ -86,8 +88,10 @@ public interface HBClientType<
    * @throws InterruptedException On interruption
    */
 
-  <R extends M> R ask(M message)
-    throws X, InterruptedException;
+  <R extends M> R ask(
+    M message,
+    Duration timeout)
+    throws X, InterruptedException, TimeoutException;
 
   /**
    * Read a message from the connection, waiting at most {@code timeout} until

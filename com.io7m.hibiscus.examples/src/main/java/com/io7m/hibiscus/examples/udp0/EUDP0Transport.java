@@ -93,21 +93,16 @@ public final class EUDP0Transport
   @Override
   public Optional<EUDP0MessageType> read(
     final Duration timeout)
-    throws EUDP0Exception
+    throws EUDP0Exception, InterruptedException
   {
     Objects.requireNonNull(timeout, "timeout");
 
-    try {
-      if (this.isClosed()) {
-        throw new EUDP0Exception(new ClosedChannelException());
-      }
-      return Optional.ofNullable(
-        this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS)
-      );
-    } catch (final InterruptedException e) {
-      Thread.currentThread().interrupt();
-      return Optional.empty();
+    if (this.isClosed()) {
+      throw new EUDP0Exception(new ClosedChannelException());
     }
+    return Optional.ofNullable(
+      this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS)
+    );
   }
 
   @Override

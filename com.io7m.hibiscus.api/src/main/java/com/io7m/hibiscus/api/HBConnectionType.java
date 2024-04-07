@@ -19,6 +19,7 @@ package com.io7m.hibiscus.api;
 
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A connection abstraction that imposes connection-like semantics on a
@@ -49,19 +50,31 @@ public interface HBConnectionType<
 
   /**
    * Send a message to the server, waiting until the server sends a response
-   * to the message.
+   * to the message. If the server has not produced a response for the message
+   * by the time the given {@code timeout} has elapsed, the function produces
+   * a {@link TimeoutException}.
    *
    * @param message The message
+   * @param timeout The timeout value
    * @param <R>     The type of responses
    *
    * @return The response
    *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
+   * @throws X                                         On errors
+   * @throws InterruptedException                      On interruption
+   * @throws TimeoutException                          If the server does not produce a response to
+   *                                                   the message
+   * @throws HBConnectionReceiveQueueOverflowException If the internal receive queue overflows
    */
 
-  <R extends M> R ask(M message)
-    throws X, InterruptedException;
+  <R extends M> R ask(
+    M message,
+    Duration timeout)
+    throws
+    InterruptedException,
+    TimeoutException,
+    HBConnectionReceiveQueueOverflowException,
+    X;
 
   /**
    * Read a message from the connection, waiting at most {@code timeout} until

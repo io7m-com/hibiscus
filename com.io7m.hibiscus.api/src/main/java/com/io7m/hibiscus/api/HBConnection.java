@@ -17,10 +17,13 @@
 
 package com.io7m.hibiscus.api;
 
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeoutException;
 
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
@@ -36,23 +39,28 @@ public final class HBConnection<
   X extends Exception>
   implements HBConnectionType<M, X>
 {
-  private static final Duration ASK_POLL_TIMEOUT =
-    Duration.ofMillis(10L);
-
   private final LinkedBlockingQueue<M> received;
   private final HBTransportType<M, X> transport;
+  private final Clock clock;
 
   /**
    * An implementation of the {@link HBConnectionType} interface.
    *
-   * @param inTransport The underlying transport
+   * @param inClock           The clock used for timeouts
+   * @param inTransport       The underlying transport
+   * @param receiveQueueBound The maximum number of messages that can be held
+   *                          in the receive queue
    */
 
   public HBConnection(
-    final HBTransportType<M, X> inTransport)
+    final Clock inClock,
+    final HBTransportType<M, X> inTransport,
+    final int receiveQueueBound)
   {
+    this.clock =
+      Objects.requireNonNull(inClock, "clock");
     this.received =
-      new LinkedBlockingQueue<>();
+      new LinkedBlockingQueue<>(receiveQueueBound);
     this.transport =
       Objects.requireNonNull(inTransport, "transport");
   }
@@ -68,29 +76,51 @@ public final class HBConnection<
 
   @Override
   public <R extends M> R ask(
-    final M message)
-    throws X, InterruptedException
+    final M message,
+    final Duration timeout)
+    throws
+    X,
+    InterruptedException,
+    TimeoutException,
+    HBConnectionReceiveQueueOverflowException
   {
     Objects.requireNonNull(message, "message");
+    Objects.requireNonNull(timeout, "timeout");
 
     this.transport.write(message);
-    while (!Thread.interrupted()) {
-      final var responseOpt = this.transport.read(ASK_POLL_TIMEOUT);
+
+    final var timeLater =
+      Instant.now(this.clock).plus(timeout);
+
+    while (true) {
+      final var timeNow = Instant.now(this.clock);
+      if (timeNow.isAfter(timeLater)) {
+        throw new TimeoutException(
+          "No response received in %s".formatted(timeout));
+      }
+
+      final var responseOpt = this.transport.read(timeout);
       if (responseOpt.isPresent()) {
         final var response = responseOpt.get();
         if (response.isResponseFor(message)) {
           return (R) response;
         }
-        this.received.add(response);
+
+        try {
+          this.received.add(response);
+        } catch (final IllegalStateException e) {
+          throw new HBConnectionReceiveQueueOverflowException(
+            this.received.size()
+          );
+        }
       }
     }
-    throw new InterruptedException();
   }
 
   @Override
   public Optional<M> receive(
     final Duration timeout)
-    throws X
+    throws X, InterruptedException
   {
     try {
       final var m = this.received.poll(timeout.toNanos(), NANOSECONDS);

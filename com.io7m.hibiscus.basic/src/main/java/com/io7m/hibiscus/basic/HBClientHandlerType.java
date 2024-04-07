@@ -19,10 +19,8 @@ package com.io7m.hibiscus.basic;
 
 import com.io7m.hibiscus.api.HBClientCloseableType;
 import com.io7m.hibiscus.api.HBConnectionParametersType;
+import com.io7m.hibiscus.api.HBConnectionType;
 import com.io7m.hibiscus.api.HBMessageType;
-
-import java.time.Duration;
-import java.util.Optional;
 
 /**
  * The type of RPC client handlers.
@@ -47,55 +45,18 @@ public interface HBClientHandlerType<
    */
 
   HBConnectionResultType<M, P, X> doConnect(
-    P parameters);
+    P parameters)
+    throws InterruptedException;
 
   /**
-   * @return If this handler is connected
+   * @return The connection
    */
 
-  boolean isConnected();
+  HBConnectionType<M, X> connection();
 
-  /**
-   * Send a message to the server without waiting for a response.
-   *
-   * @param message The message
-   *
-   * @throws X On errors
-   */
-
-  void doSend(
-    M message)
-    throws X;
-
-  /**
-   * Read a message from the connection, waiting at most {@code timeout} until
-   * giving up.
-   *
-   * @param timeout The timeout
-   *
-   * @return The message, if any
-   *
-   * @throws X On errors
-   */
-
-  Optional<M> doReceive(
-    Duration timeout)
-    throws X;
-
-  /**
-   * Send a message to the server, waiting until the server sends a response
-   * to the message.
-   *
-   * @param message The message
-   * @param <R>     The type of responses
-   *
-   * @return The response
-   *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
-   */
-
-  <R extends M> R doAsk(
-    M message)
-    throws X, InterruptedException;
+  @Override
+  default boolean isClosed()
+  {
+    return this.connection().isClosed();
+  }
 }

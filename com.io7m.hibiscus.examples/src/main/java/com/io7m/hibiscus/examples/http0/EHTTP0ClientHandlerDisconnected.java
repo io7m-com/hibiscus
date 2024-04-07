@@ -18,6 +18,9 @@
 package com.io7m.hibiscus.examples.http0;
 
 import com.io7m.hibiscus.api.HBConnection;
+import com.io7m.hibiscus.api.HBConnectionClosed;
+import com.io7m.hibiscus.api.HBConnectionType;
+import com.io7m.hibiscus.api.HBMessageType;
 import com.io7m.hibiscus.basic.HBClientHandlerAndMessage;
 import com.io7m.hibiscus.basic.HBConnectionError;
 import com.io7m.hibiscus.basic.HBConnectionFailed;
@@ -29,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,11 +47,20 @@ public final class EHTTP0ClientHandlerDisconnected
   private static final Logger LOG =
     LoggerFactory.getLogger(EHTTP0ClientHandlerDisconnected.class);
 
-  private final AtomicBoolean closed;
+  private final HBConnectionClosed<EHTTP0MessageType, EHTTP0Exception> connection;
+  private final int maximumReceiveQueueSize;
+  private final Clock clock;
 
-  EHTTP0ClientHandlerDisconnected()
+  EHTTP0ClientHandlerDisconnected(
+    final Clock inClock,
+    final int inMaximumReceiveQueueSize)
   {
-    this.closed = new AtomicBoolean(false);
+    this.clock =
+      Objects.requireNonNull(inClock, "inClock");
+    this.maximumReceiveQueueSize =
+      inMaximumReceiveQueueSize;
+    this.connection =
+      new HBConnectionClosed<>(EHTTP0Exception::new);
   }
 
   @Override
@@ -57,6 +70,7 @@ public final class EHTTP0ClientHandlerDisconnected
     EHTTP0Exception>
   doConnect(
     final EHTTP0ConnectionParameters parameters)
+    throws InterruptedException
   {
     Objects.requireNonNull(parameters, "credentials");
 
@@ -111,7 +125,11 @@ public final class EHTTP0ClientHandlerDisconnected
                   yield new HBConnectionSucceeded<>(
                     new HBClientHandlerAndMessage<>(
                       new EHTTP0ClientHandlerConnected(
-                        new HBConnection<>(transport)
+                        new HBConnection<>(
+                          this.clock,
+                          transport,
+                          this.maximumReceiveQueueSize
+                        )
                       ),
                       ok
                     )
@@ -140,47 +158,15 @@ public final class EHTTP0ClientHandlerDisconnected
   }
 
   @Override
-  public boolean isConnected()
+  public HBConnectionType<EHTTP0MessageType, EHTTP0Exception> connection()
   {
-    return false;
-  }
-
-  @Override
-  public boolean isClosed()
-  {
-    return this.closed.get();
+    return this.connection;
   }
 
   @Override
   public void close()
-  {
-    this.closed.set(true);
-  }
-
-  @Override
-  public void doSend(
-    final EHTTP0MessageType message)
     throws EHTTP0Exception
   {
-    Objects.requireNonNull(message, "message");
-    throw new EHTTP0Exception("Not connected!");
-  }
-
-  @Override
-  public Optional<EHTTP0MessageType> doReceive(
-    final Duration timeout)
-    throws EHTTP0Exception
-  {
-    Objects.requireNonNull(timeout, "timeout");
-    throw new EHTTP0Exception("Not connected!");
-  }
-
-  @Override
-  public <R extends EHTTP0MessageType> R doAsk(
-    final EHTTP0MessageType message)
-    throws EHTTP0Exception
-  {
-    Objects.requireNonNull(message, "message");
-    throw new EHTTP0Exception("Not connected!");
+    this.connection.close();
   }
 }

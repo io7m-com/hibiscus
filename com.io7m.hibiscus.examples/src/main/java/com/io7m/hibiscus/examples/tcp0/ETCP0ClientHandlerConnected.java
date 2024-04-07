@@ -18,6 +18,7 @@
 package com.io7m.hibiscus.examples.tcp0;
 
 import com.io7m.hibiscus.api.HBConnection;
+import com.io7m.hibiscus.api.HBConnectionType;
 import com.io7m.hibiscus.basic.HBConnectionError;
 import com.io7m.hibiscus.basic.HBConnectionResultType;
 
@@ -50,15 +51,9 @@ public final class ETCP0ClientHandlerConnected
   }
 
   @Override
-  public boolean isConnected()
+  public HBConnectionType<ETCP0MessageType, ETCP0Exception> connection()
   {
-    return !this.connection.isClosed();
-  }
-
-  @Override
-  public boolean isClosed()
-  {
-    return this.connection.isClosed();
+    return this.connection;
   }
 
   @Override
@@ -66,29 +61,5 @@ public final class ETCP0ClientHandlerConnected
     throws ETCP0Exception
   {
     this.connection.close();
-  }
-
-  @Override
-  public void doSend(
-    final ETCP0MessageType message)
-    throws ETCP0Exception
-  {
-    this.connection.send(message);
-  }
-
-  @Override
-  public Optional<ETCP0MessageType> doReceive(
-    final Duration timeout)
-    throws ETCP0Exception
-  {
-    return this.connection.receive(timeout);
-  }
-
-  @Override
-  public <R extends ETCP0MessageType> R doAsk(
-    final ETCP0MessageType message)
-    throws ETCP0Exception, InterruptedException
-  {
-    return this.connection.ask(message);
   }
 }

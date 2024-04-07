@@ -25,9 +25,4 @@ public record ETCP0ResponseFailure(
   String message)
   implements ETCP0ResponseType
 {
-  @Override
-  public boolean isError()
-  {
-    return true;
-  }
 }

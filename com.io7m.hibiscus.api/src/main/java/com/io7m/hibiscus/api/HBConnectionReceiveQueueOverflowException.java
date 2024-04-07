@@ -15,14 +15,24 @@
  */
 
 
-package com.io7m.hibiscus.examples.http0;
+package com.io7m.hibiscus.api;
 
-import java.util.UUID;
+/**
+ * The receive queue has overflowed.
+ */
 
-public record EHTTP0ResponseFailure(
-  UUID messageId,
-  UUID correlationId,
-  String message)
-  implements EHTTP0ResponseType
+public final class HBConnectionReceiveQueueOverflowException
+  extends Exception
 {
+  /**
+   * The receive queue has overflowed.
+   *
+   * @param size The queue size
+   */
+
+  public HBConnectionReceiveQueueOverflowException(
+    final int size)
+  {
+    super("Receive queue is full (Size %d)".formatted(Integer.valueOf(size)));
+  }
 }

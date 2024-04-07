@@ -39,12 +39,13 @@ public interface HBTransportType<
    *
    * @return The message
    *
-   * @throws X On errors
+   * @throws X                    On errors
+   * @throws InterruptedException On interruption
    */
 
   Optional<M> read(
     Duration timeout)
-    throws X;
+    throws X, InterruptedException;
 
   /**
    * Place a message on the transport.

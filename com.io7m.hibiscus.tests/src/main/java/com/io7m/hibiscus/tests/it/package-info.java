@@ -14,15 +14,8 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/**
+ * RPC Client API Specification (Test suite)
+ */
 
-package com.io7m.hibiscus.examples.http0;
-
-import java.util.UUID;
-
-public record EHTTP0ResponseFailure(
-  UUID messageId,
-  UUID correlationId,
-  String message)
-  implements EHTTP0ResponseType
-{
-}
+package com.io7m.hibiscus.tests.it;

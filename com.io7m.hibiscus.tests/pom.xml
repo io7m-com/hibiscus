@@ -34,6 +34,11 @@
       <artifactId>com.io7m.hibiscus.basic</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>com.io7m.hibiscus.examples</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -80,8 +85,6 @@
       <groupId>com.io7m.percentpass</groupId>
       <artifactId>com.io7m.percentpass.extension</artifactId>
     </dependency>
-
-
 
     <dependency>
       <groupId>org.osgi</groupId>

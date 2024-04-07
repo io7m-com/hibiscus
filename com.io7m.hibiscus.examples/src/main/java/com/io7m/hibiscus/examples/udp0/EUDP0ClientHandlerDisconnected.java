@@ -18,14 +18,19 @@
 package com.io7m.hibiscus.examples.udp0;
 
 import com.io7m.hibiscus.api.HBConnection;
+import com.io7m.hibiscus.api.HBConnectionClosed;
+import com.io7m.hibiscus.api.HBConnectionType;
 import com.io7m.hibiscus.basic.HBClientHandlerAndMessage;
 import com.io7m.hibiscus.basic.HBConnectionError;
 import com.io7m.hibiscus.basic.HBConnectionFailed;
 import com.io7m.hibiscus.basic.HBConnectionResultType;
 import com.io7m.hibiscus.basic.HBConnectionSucceeded;
+import com.io7m.hibiscus.examples.tcp0.ETCP0Exception;
+import com.io7m.hibiscus.examples.tcp0.ETCP0MessageType;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
@@ -36,11 +41,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class EUDP0ClientHandlerDisconnected
   extends EUDP0ClientHandlerAbstract
 {
-  private final AtomicBoolean closed;
+  private final HBConnectionClosed<EUDP0MessageType, EUDP0Exception> connection;
+  private final Clock clock;
+  private final int maximumReceiveQueueSize;
 
-  EUDP0ClientHandlerDisconnected()
+  EUDP0ClientHandlerDisconnected(
+    final Clock inClock,
+    final int inMaximumReceiveQueueSize)
   {
-    this.closed = new AtomicBoolean(false);
+    this.clock =
+      Objects.requireNonNull(inClock, "inClock");
+    this.maximumReceiveQueueSize =
+      inMaximumReceiveQueueSize;
+    this.connection =
+      new HBConnectionClosed<>(EUDP0Exception::new);
   }
 
   @Override
@@ -50,6 +64,7 @@ public final class EUDP0ClientHandlerDisconnected
     EUDP0Exception>
   doConnect(
     final EUDP0ConnectionParameters parameters)
+    throws InterruptedException
   {
     Objects.requireNonNull(parameters, "credentials");
 
@@ -88,7 +103,11 @@ public final class EUDP0ClientHandlerDisconnected
                   yield new HBConnectionSucceeded<>(
                     new HBClientHandlerAndMessage<>(
                       new EUDP0ClientHandlerConnected(
-                        new HBConnection<>(transport)
+                        new HBConnection<>(
+                          this.clock,
+                          transport,
+                          this.maximumReceiveQueueSize
+                        )
                       ),
                       ok
                     )
@@ -117,45 +136,15 @@ public final class EUDP0ClientHandlerDisconnected
   }
 
   @Override
-  public boolean isConnected()
+  public HBConnectionType<EUDP0MessageType, EUDP0Exception> connection()
   {
-    return false;
-  }
-
-  @Override
-  public boolean isClosed()
-  {
-    return this.closed.get();
+    return this.connection;
   }
 
   @Override
   public void close()
-  {
-    this.closed.set(true);
-  }
-
-  @Override
-  public void doSend(
-    final EUDP0MessageType message)
     throws EUDP0Exception
   {
-    throw new EUDP0Exception("Not connected!");
-  }
-
-  @Override
-  public Optional<EUDP0MessageType> doReceive(
-    final Duration timeout)
-    throws EUDP0Exception
-  {
-    Objects.requireNonNull(timeout, "pollTimeout");
-    throw new EUDP0Exception("Not connected!");
-  }
-
-  @Override
-  public <R extends EUDP0MessageType> R doAsk(
-    final EUDP0MessageType message)
-    throws EUDP0Exception
-  {
-    throw new EUDP0Exception("Not connected!");
+    this.connection.close();
   }
 }
