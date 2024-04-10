@@ -17,7 +17,7 @@
 
 package com.io7m.hibiscus.examples.tcp0;
 
-import com.io7m.hibiscus.basic.HBClientAbstract;
+import com.io7m.hibiscus.api.HBClientAbstract;
 
 import java.time.Clock;
 
@@ -28,8 +28,7 @@ public final class ETCP0Client
   private ETCP0Client()
   {
     super(new ETCP0ClientHandlerDisconnected(
-      Clock.systemUTC(),
-      1000
+      Clock.systemUTC()
     ), ETCP0Exception::new);
   }
 

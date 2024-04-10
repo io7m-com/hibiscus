@@ -17,6 +17,10 @@
 
 package com.io7m.hibiscus.examples.udp0;
 
+import com.io7m.hibiscus.api.HBReadNothing;
+import com.io7m.hibiscus.api.HBReadType;
+import com.io7m.hibiscus.api.HBReadReceived;
+import com.io7m.hibiscus.api.HBReadResponse;
 import com.io7m.hibiscus.api.HBTransportType;
 import com.io7m.jmulticlose.core.CloseableCollection;
 import com.io7m.jmulticlose.core.CloseableCollectionType;
@@ -25,12 +29,17 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.nio.channels.ClosedChannelException;
+import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class EUDP0Transport
   implements HBTransportType<EUDP0MessageType, EUDP0Exception>
@@ -39,12 +48,17 @@ public final class EUDP0Transport
   private final DatagramSocket socket;
   private final LinkedBlockingQueue<EUDP0MessageType> inbox;
   private final Thread readerThread;
+  private final Clock clock;
   private final InetSocketAddress remoteAddress;
+  private final Map<UUID, EUDP0MessageType> sent;
 
   EUDP0Transport(
+    final Clock inClock,
     final InetSocketAddress inRemoteAddress,
     final DatagramSocket inSocket)
   {
+    this.clock =
+      Objects.requireNonNull(inClock, "inClock");
     this.remoteAddress =
       Objects.requireNonNull(inRemoteAddress, "inRemoteAddress");
     this.resources =
@@ -58,6 +72,9 @@ public final class EUDP0Transport
 
     this.inbox =
       new LinkedBlockingQueue<>();
+    this.sent =
+      new HashMap<>();
+
     this.readerThread =
       Thread.startVirtualThread(this::readLoop);
   }
@@ -91,7 +108,7 @@ public final class EUDP0Transport
   }
 
   @Override
-  public Optional<EUDP0MessageType> read(
+  public HBReadType<EUDP0MessageType> receive(
     final Duration timeout)
     throws EUDP0Exception, InterruptedException
   {
@@ -100,13 +117,37 @@ public final class EUDP0Transport
     if (this.isClosed()) {
       throw new EUDP0Exception(new ClosedChannelException());
     }
-    return Optional.ofNullable(
-      this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS)
-    );
+
+    final var m =
+      this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS);
+
+    if (m == null) {
+      return new HBReadNothing<>();
+    }
+
+    if (m instanceof final EUDP0ResponseType rr) {
+      final var original =
+        this.sent.remove(rr.correlationId());
+
+      if (original != null) {
+        return new HBReadResponse<>(original, rr);
+      }
+    }
+
+    return new HBReadReceived<>(m);
   }
 
   @Override
-  public void write(
+  public void send(
+    final EUDP0MessageType message)
+    throws EUDP0Exception
+  {
+    this.sendAndForget(message);
+    this.sent.put(message.messageId(), message);
+  }
+
+  @Override
+  public void sendAndForget(
     final EUDP0MessageType message)
     throws EUDP0Exception
   {
@@ -120,6 +161,48 @@ public final class EUDP0Transport
     } catch (final Exception e) {
       this.close();
       throw new EUDP0Exception(e);
+    }
+  }
+
+  @Override
+  public EUDP0MessageType sendAndWait(
+    final EUDP0MessageType message,
+    final Duration timeout)
+    throws EUDP0Exception, InterruptedException, TimeoutException
+  {
+    this.send(message);
+
+    final var slices =
+      Math.max(1L, (long) this.inbox.size() * 2L);
+    final var timeSlice =
+      timeout.dividedBy(slices);
+
+    final var timeLater =
+      Instant.now(this.clock)
+        .plus(timeout);
+
+    while (true) {
+      final var timeNow = Instant.now(this.clock);
+      if (timeNow.isAfter(timeLater)) {
+        throw new TimeoutException(
+          "No response received in %s".formatted(timeout));
+      }
+
+      final var r =
+        this.inbox.poll(timeSlice.toNanos(), TimeUnit.NANOSECONDS);
+
+      if (r == null) {
+        continue;
+      }
+
+      if (r instanceof final EUDP0ResponseType response) {
+        if (Objects.equals(response.correlationId(), message.messageId())) {
+          this.sent.remove(message.messageId());
+          return response;
+        }
+      }
+
+      this.inbox.put(r);
     }
   }
 

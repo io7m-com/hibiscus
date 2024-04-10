@@ -15,38 +15,16 @@
  */
 
 
-package com.io7m.hibiscus.basic;
-
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBMessageType;
-
-import java.util.Objects;
+package com.io7m.hibiscus.api;
 
 /**
- * A connection attempt failed with an exception.
+ * Nothing was received from a transport.
  *
- * @param exception The exception
- * @param <M>       The type of messages
- * @param <P>       The type of connection parameters
- * @param <X>       the type of exceptions
+ * @param <M> The type of messages
  */
 
-public record HBConnectionError<
-  M extends HBMessageType,
-  P extends HBConnectionParametersType,
-  X extends Exception>(
-  Exception exception)
-  implements HBConnectionResultType<M, P, X>
+public record HBReadNothing<M extends HBMessageType>()
+  implements HBReadType<M>
 {
 
-  /**
-   * A connection attempt failed with an exception.
-   *
-   * @param exception The exception
-   */
-
-  public HBConnectionError
-  {
-    Objects.requireNonNull(exception, "exception");
-  }
 }

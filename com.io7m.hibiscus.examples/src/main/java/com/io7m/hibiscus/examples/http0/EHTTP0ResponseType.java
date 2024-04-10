@@ -17,9 +17,6 @@
 
 package com.io7m.hibiscus.examples.http0;
 
-import com.io7m.hibiscus.api.HBMessageType;
-
-import java.util.Objects;
 import java.util.UUID;
 
 public sealed interface EHTTP0ResponseType
@@ -28,15 +25,4 @@ public sealed interface EHTTP0ResponseType
   EHTTP0ResponseOK
 {
   UUID correlationId();
-
-  @Override
-  default boolean isResponseFor(
-    final HBMessageType message)
-  {
-    Objects.requireNonNull(message, "message");
-    if (message instanceof final EHTTP0MessageType m) {
-      return Objects.equals(this.correlationId(), m.messageId());
-    }
-    return false;
-  }
 }

@@ -18,21 +18,13 @@
 package com.io7m.hibiscus.api;
 
 /**
- * The receive queue has overflowed.
+ * The result of reading a transport.
+ *
+ * @param <M> The type of messages
  */
 
-public final class HBConnectionReceiveQueueOverflowException
-  extends Exception
+public sealed interface HBReadType<M extends HBMessageType>
+  permits HBReadNothing, HBReadReceived, HBReadResponse
 {
-  /**
-   * The receive queue has overflowed.
-   *
-   * @param size The queue size
-   */
 
-  public HBConnectionReceiveQueueOverflowException(
-    final int size)
-  {
-    super("Receive queue is full (Size %d)".formatted(Integer.valueOf(size)));
-  }
 }

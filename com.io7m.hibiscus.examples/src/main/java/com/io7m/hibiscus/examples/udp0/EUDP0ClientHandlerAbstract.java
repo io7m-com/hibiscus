@@ -17,7 +17,9 @@
 
 package com.io7m.hibiscus.examples.udp0;
 
-import com.io7m.hibiscus.basic.HBClientHandlerType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
+
+import java.util.function.Function;
 
 public abstract class EUDP0ClientHandlerAbstract
   implements HBClientHandlerType<
@@ -25,6 +27,12 @@ public abstract class EUDP0ClientHandlerAbstract
   EUDP0ConnectionParameters,
   EUDP0Exception>
 {
+  @Override
+  public final Function<Throwable, EUDP0Exception> exceptionTransformer()
+  {
+    return EUDP0Exception::new;
+  }
+
   EUDP0ClientHandlerAbstract()
   {
 

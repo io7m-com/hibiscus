@@ -17,49 +17,59 @@
 
 package com.io7m.hibiscus.examples.tcp0;
 
-import com.io7m.hibiscus.api.HBConnection;
-import com.io7m.hibiscus.api.HBConnectionType;
-import com.io7m.hibiscus.basic.HBConnectionError;
-import com.io7m.hibiscus.basic.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBTransportType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
 
-import java.nio.channels.AlreadyConnectedException;
-import java.time.Duration;
+import java.time.Clock;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class ETCP0ClientHandlerConnected
   extends ETCP0ClientHandlerAbstract
 {
-  private final HBConnection<ETCP0MessageType, ETCP0Exception> connection;
+  private final HBTransportType<ETCP0MessageType, ETCP0Exception> transport;
+  private final Clock clock;
 
   ETCP0ClientHandlerConnected(
-    final HBConnection<ETCP0MessageType, ETCP0Exception> inConnection)
+    final Clock inClock,
+    final HBTransportType<ETCP0MessageType, ETCP0Exception> inConnection)
   {
-    this.connection =
-      Objects.requireNonNull(inConnection, "connection");
+    this.clock =
+      Objects.requireNonNull(inClock, "inClock");
+    this.transport =
+      Objects.requireNonNull(inConnection, "transport");
   }
 
   @Override
   public HBConnectionResultType<
-      ETCP0MessageType,
-      ETCP0ConnectionParameters,
-      ETCP0Exception>
+    ETCP0MessageType,
+    ETCP0ConnectionParameters,
+    HBClientHandlerType<ETCP0MessageType, ETCP0ConnectionParameters, ETCP0Exception>,
+    ETCP0Exception>
   doConnect(
     final ETCP0ConnectionParameters parameters)
+    throws InterruptedException
   {
-    return new HBConnectionError<>(new AlreadyConnectedException());
+    return new ETCP0ClientHandlerDisconnected(this.clock)
+      .doConnect(parameters);
   }
 
   @Override
-  public HBConnectionType<ETCP0MessageType, ETCP0Exception> connection()
+  public HBTransportType<ETCP0MessageType, ETCP0Exception> transport()
   {
-    return this.connection;
+    return this.transport;
+  }
+
+  @Override
+  public boolean isClosed()
+  {
+    return this.transport.isClosed();
   }
 
   @Override
   public void close()
     throws ETCP0Exception
   {
-    this.connection.close();
+    this.transport.close();
   }
 }

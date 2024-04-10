@@ -15,10 +15,7 @@
  */
 
 
-package com.io7m.hibiscus.basic;
-
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBMessageType;
+package com.io7m.hibiscus.api;
 
 import java.util.Objects;
 
@@ -28,15 +25,17 @@ import java.util.Objects;
  * @param message The message
  * @param <M>     The type of messages
  * @param <P>     The type of connection parameters
+ * @param <R>     The type of extra result values
  * @param <X>     the type of exceptions
  */
 
 public record HBConnectionFailed<
   M extends HBMessageType,
   P extends HBConnectionParametersType,
+  R,
   X extends Exception>(
   M message)
-  implements HBConnectionResultType<M, P, X>
+  implements HBConnectionResultType<M, P, R, X>
 {
   /**
    * A connection attempt failed with a message.

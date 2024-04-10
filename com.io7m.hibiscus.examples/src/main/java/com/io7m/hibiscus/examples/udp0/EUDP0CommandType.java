@@ -17,17 +17,10 @@
 
 package com.io7m.hibiscus.examples.udp0;
 
-import com.io7m.hibiscus.api.HBMessageType;
-
 public sealed interface EUDP0CommandType
   extends EUDP0MessageType
   permits EUDP0CommandHello,
   EUDP0CommandLogin
 {
-  @Override
-  default boolean isResponseFor(
-    final HBMessageType message)
-  {
-    return false;
-  }
+
 }

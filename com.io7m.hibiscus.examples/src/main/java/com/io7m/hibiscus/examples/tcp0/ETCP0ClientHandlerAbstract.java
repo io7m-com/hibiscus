@@ -17,7 +17,9 @@
 
 package com.io7m.hibiscus.examples.tcp0;
 
-import com.io7m.hibiscus.basic.HBClientHandlerType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
+
+import java.util.function.Function;
 
 public abstract class ETCP0ClientHandlerAbstract
   implements HBClientHandlerType<
@@ -25,6 +27,12 @@ public abstract class ETCP0ClientHandlerAbstract
       ETCP0ConnectionParameters,
       ETCP0Exception>
 {
+  @Override
+  public final Function<Throwable, ETCP0Exception> exceptionTransformer()
+  {
+    return ETCP0Exception::new;
+  }
+
   ETCP0ClientHandlerAbstract()
   {
 

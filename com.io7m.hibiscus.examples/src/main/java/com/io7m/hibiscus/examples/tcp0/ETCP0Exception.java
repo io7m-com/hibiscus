@@ -22,7 +22,7 @@ import java.util.Objects;
 public final class ETCP0Exception extends Exception
 {
   public ETCP0Exception(
-    final Exception cause)
+    final Throwable cause)
   {
     super(Objects.requireNonNull(cause, "cause"));
   }

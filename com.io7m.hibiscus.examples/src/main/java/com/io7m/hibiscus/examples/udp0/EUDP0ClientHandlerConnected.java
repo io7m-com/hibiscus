@@ -17,32 +17,31 @@
 
 package com.io7m.hibiscus.examples.udp0;
 
-import com.io7m.hibiscus.api.HBConnection;
-import com.io7m.hibiscus.api.HBConnectionType;
-import com.io7m.hibiscus.basic.HBConnectionError;
-import com.io7m.hibiscus.basic.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBConnectionError;
+import com.io7m.hibiscus.api.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBTransportType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
 
 import java.nio.channels.AlreadyConnectedException;
-import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class EUDP0ClientHandlerConnected
   extends EUDP0ClientHandlerAbstract
 {
-  private final HBConnection<EUDP0MessageType, EUDP0Exception> connection;
+  private final HBTransportType<EUDP0MessageType, EUDP0Exception> transport;
 
   EUDP0ClientHandlerConnected(
-    final HBConnection<EUDP0MessageType, EUDP0Exception> inConnection)
+    final HBTransportType<EUDP0MessageType, EUDP0Exception> inConnection)
   {
-    this.connection =
-      Objects.requireNonNull(inConnection, "connection");
+    this.transport =
+      Objects.requireNonNull(inConnection, "transport");
   }
 
   @Override
   public HBConnectionResultType<
     EUDP0MessageType,
     EUDP0ConnectionParameters,
+    HBClientHandlerType<EUDP0MessageType, EUDP0ConnectionParameters, EUDP0Exception>,
     EUDP0Exception>
   doConnect(
     final EUDP0ConnectionParameters parameters)
@@ -51,15 +50,21 @@ public final class EUDP0ClientHandlerConnected
   }
 
   @Override
-  public HBConnectionType<EUDP0MessageType, EUDP0Exception> connection()
+  public HBTransportType<EUDP0MessageType, EUDP0Exception> transport()
   {
-    return this.connection;
+    return this.transport;
+  }
+
+  @Override
+  public boolean isClosed()
+  {
+    return this.transport.isClosed();
   }
 
   @Override
   public void close()
     throws EUDP0Exception
   {
-    this.connection.close();
+    this.transport.close();
   }
 }

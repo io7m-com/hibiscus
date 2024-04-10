@@ -24,7 +24,6 @@ module com.io7m.hibiscus.examples
   requires static org.osgi.annotation.bundle;
 
   requires com.io7m.hibiscus.api;
-  requires com.io7m.hibiscus.basic;
 
   requires com.io7m.jmulticlose.core;
   requires io.helidon.webserver;

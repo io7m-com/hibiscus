@@ -22,7 +22,7 @@ import java.util.Objects;
 public final class EHTTP0Exception extends Exception
 {
   public EHTTP0Exception(
-    final Exception cause)
+    final Throwable cause)
   {
     super(Objects.requireNonNull(cause, "cause"));
   }

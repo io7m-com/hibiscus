@@ -17,25 +17,21 @@
 
 package com.io7m.hibiscus.examples.http0;
 
-import com.io7m.hibiscus.api.HBConnection;
-import com.io7m.hibiscus.api.HBConnectionType;
-import com.io7m.hibiscus.basic.HBConnectionError;
-import com.io7m.hibiscus.basic.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBTransportType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
 
-import java.nio.channels.AlreadyConnectedException;
-import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class EHTTP0ClientHandlerConnected
   extends EHTTP0ClientHandlerAbstract
 {
-  private final HBConnection<EHTTP0MessageType, EHTTP0Exception> connection;
+  private final HBTransportType<EHTTP0MessageType, EHTTP0Exception> transport;
 
   EHTTP0ClientHandlerConnected(
-    final HBConnection<EHTTP0MessageType, EHTTP0Exception> inConnection)
+    final HBTransportType<EHTTP0MessageType, EHTTP0Exception> inConnection)
   {
-    this.connection =
+    this.transport =
       Objects.requireNonNull(inConnection, "connection");
   }
 
@@ -43,23 +39,31 @@ public final class EHTTP0ClientHandlerConnected
   public HBConnectionResultType<
     EHTTP0MessageType,
     EHTTP0ConnectionParameters,
+    HBClientHandlerType<EHTTP0MessageType, EHTTP0ConnectionParameters, EHTTP0Exception>,
     EHTTP0Exception>
   doConnect(
     final EHTTP0ConnectionParameters parameters)
+    throws InterruptedException
   {
-    return new HBConnectionError<>(new AlreadyConnectedException());
+    return new EHTTP0ClientHandlerDisconnected().doConnect(parameters);
   }
 
   @Override
-  public HBConnectionType<EHTTP0MessageType, EHTTP0Exception> connection()
+  public HBTransportType<EHTTP0MessageType, EHTTP0Exception> transport()
   {
-    return this.connection;
+    return this.transport;
+  }
+
+  @Override
+  public boolean isClosed()
+  {
+    return this.transport.isClosed();
   }
 
   @Override
   public void close()
     throws EHTTP0Exception
   {
-    this.connection.close();
+    this.transport.close();
   }
 }

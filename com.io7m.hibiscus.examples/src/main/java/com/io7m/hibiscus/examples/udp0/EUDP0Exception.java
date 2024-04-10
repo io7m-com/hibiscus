@@ -22,7 +22,7 @@ import java.util.Objects;
 public final class EUDP0Exception extends Exception
 {
   public EUDP0Exception(
-    final Exception cause)
+    final Throwable cause)
   {
     super(Objects.requireNonNull(cause, "cause"));
   }

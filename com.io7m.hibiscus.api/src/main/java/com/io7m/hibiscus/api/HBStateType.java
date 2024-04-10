@@ -73,19 +73,19 @@ public sealed interface HBStateType
   }
 
   /**
-   * The client is authenticating with the server.
+   * The client is connecting to the server.
    *
    * @param credentials The credentials
    */
 
-  record HBStateExecutingLogin(HBConnectionParametersType credentials)
+  record HBStateConnecting(HBConnectionParametersType credentials)
     implements HBStateType
   {
     /**
-     * The client is authenticating with the server.
+     * The client is connecting to the server.
      */
 
-    public HBStateExecutingLogin
+    public HBStateConnecting
     {
       Objects.requireNonNull(credentials, "credentials");
     }

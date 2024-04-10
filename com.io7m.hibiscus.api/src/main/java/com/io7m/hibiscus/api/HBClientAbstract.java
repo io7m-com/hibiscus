@@ -15,20 +15,15 @@
  */
 
 
-package com.io7m.hibiscus.basic;
+package com.io7m.hibiscus.api;
 
-import com.io7m.hibiscus.api.HBClientType;
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBConnectionReceiveQueueOverflowException;
-import com.io7m.hibiscus.api.HBMessageType;
-import com.io7m.hibiscus.api.HBStateType;
 import com.io7m.hibiscus.api.HBStateType.HBStateClosed;
 import com.io7m.hibiscus.api.HBStateType.HBStateClosing;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnected;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnectionFailed;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnectionSucceeded;
 import com.io7m.hibiscus.api.HBStateType.HBStateDisconnected;
-import com.io7m.hibiscus.api.HBStateType.HBStateExecutingLogin;
+import com.io7m.hibiscus.api.HBStateType.HBStateConnecting;
 import net.jcip.annotations.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +73,9 @@ public abstract class HBClientAbstract<
       Objects.requireNonNull(inExceptions, "inExceptions");
 
     this.statePublisher =
-      new SubmissionPublisher<>(new HBDirectExecutor(), Flow.defaultBufferSize());
+      new SubmissionPublisher<>(
+        new HBDirectExecutor(),
+        Flow.defaultBufferSize());
     this.stateLock =
       new Object();
     this.stateNow =
@@ -94,7 +91,7 @@ public abstract class HBClientAbstract<
   }
 
   @Override
-  public final Optional<M> connect(
+  public final HBConnectionResultType<M, P, ?, X> connect(
     final P parameters)
     throws InterruptedException
   {
@@ -108,35 +105,37 @@ public abstract class HBClientAbstract<
       // Ignore
     }
 
-    this.publishState(new HBStateExecutingLogin(parameters));
+    this.publishState(new HBStateConnecting(parameters));
 
     try {
       return switch (this.handler.doConnect(parameters)) {
-        case final HBConnectionError<M, P, X> error -> {
+        case final HBConnectionError<
+          M, P, HBClientHandlerType<M, P, X>, X> error -> {
           this.publishState(new HBStateConnectionFailed(
             Optional.of(error.exception()),
             Optional.empty()
           ));
           LOG.debug("Login failed {}", error);
-          yield Optional.empty();
+          yield new HBConnectionError<>(error.exception());
         }
 
-        case final HBConnectionFailed<M, P, X> failed -> {
+        case final HBConnectionFailed<
+          M, P, HBClientHandlerType<M, P, X>, X> failed -> {
           this.publishState(new HBStateConnectionFailed(
             Optional.empty(),
             Optional.of(failed.message())
           ));
           LOG.debug("Login failed {}", failed);
-          yield Optional.empty();
+          yield new HBConnectionFailed<>(failed.message());
         }
 
-        case final HBConnectionSucceeded<M, P, X> succeeded -> {
-          final var r = succeeded.handlerAndMessage();
-          this.handler = r.newHandler();
-          this.publishState(new HBStateConnectionSucceeded(r.message()));
+        case final HBConnectionSucceeded<
+          M, P, HBClientHandlerType<M, P, X>, X> succeeded -> {
+          this.handler = succeeded.extraData();
+          this.publishState(new HBStateConnectionSucceeded(succeeded.message()));
           this.publishState(new HBStateConnected());
           LOG.debug("Login succeeded");
-          yield Optional.of(r.message());
+          yield new HBConnectionSucceeded<>(succeeded.message(), Void.class);
         }
       };
     } catch (final InterruptedException e) {
@@ -220,36 +219,36 @@ public abstract class HBClientAbstract<
   }
 
   @Override
+  public final HBReadType<M> receive(
+    final Duration timeout)
+    throws X, InterruptedException
+  {
+    return this.handler.receive(timeout);
+  }
+
+  @Override
   public final void send(
     final M message)
     throws X, InterruptedException
   {
-    Objects.requireNonNull(message, "message");
-    this.handler.connection().send(message);
+    this.handler.send(message);
   }
 
   @Override
-  public final <R extends M> R ask(
+  public final void sendAndForget(
+    final M message)
+    throws X, InterruptedException
+  {
+    this.handler.sendAndForget(message);
+  }
+
+  @Override
+  public final M sendAndWait(
     final M message,
     final Duration timeout)
     throws X, InterruptedException, TimeoutException
   {
-    Objects.requireNonNull(message, "message");
-
-    try {
-      return this.handler.connection().ask(message, timeout);
-    } catch (final HBConnectionReceiveQueueOverflowException e) {
-      throw this.exceptions.apply(e);
-    }
-  }
-
-  @Override
-  public final Optional<M> receive(
-    final Duration timeout)
-    throws X, InterruptedException
-  {
-    Objects.requireNonNull(timeout, "pollTimeout");
-    return this.handler.connection().receive(timeout);
+    return this.handler.sendAndWait(message, timeout);
   }
 
   private void publishState(

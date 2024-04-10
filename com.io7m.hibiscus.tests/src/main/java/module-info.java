@@ -28,11 +28,9 @@ open module com.io7m.hibiscus.tests
   requires org.mockito;
 
   requires com.io7m.hibiscus.api;
-  requires com.io7m.hibiscus.basic;
   requires com.io7m.jmulticlose.core;
   requires org.slf4j;
   requires com.io7m.hibiscus.examples;
 
-  exports com.io7m.hibiscus.tests;
   exports com.io7m.hibiscus.tests.it;
 }

@@ -26,5 +26,4 @@ public sealed interface EUDP0MessageType
   permits EUDP0CommandType, EUDP0ResponseType
 {
   UUID messageId();
-
 }

@@ -151,7 +151,7 @@ public final class EUDP0IT
 
       {
         final var r =
-          this.client.ask(
+          this.client.sendAndWait(
             new EUDP0CommandHello(UUID.randomUUID(), "Hello!"),
             Duration.ofSeconds(1L)
           );
@@ -161,7 +161,7 @@ public final class EUDP0IT
 
       {
         final var r =
-          this.client.ask(
+          this.client.sendAndWait(
             new EUDP0CommandHello(UUID.randomUUID(), "Hello!"),
             Duration.ofSeconds(1L)
           );
@@ -171,7 +171,7 @@ public final class EUDP0IT
 
       {
         final var r =
-          this.client.ask(
+          this.client.sendAndWait(
             new EUDP0CommandHello(UUID.randomUUID(), "Hello!"),
             Duration.ofSeconds(1L)
           );
@@ -301,7 +301,7 @@ public final class EUDP0IT
         this.client.send(new EUDP0CommandHello(UUID.randomUUID(), "Hello!"));
       });
       assertThrows(EUDP0Exception.class, () -> {
-        this.client.ask(
+        this.client.sendAndWait(
           new EUDP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );

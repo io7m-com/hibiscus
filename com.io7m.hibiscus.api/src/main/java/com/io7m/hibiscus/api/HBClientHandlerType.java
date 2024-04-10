@@ -15,12 +15,11 @@
  */
 
 
-package com.io7m.hibiscus.basic;
+package com.io7m.hibiscus.api;
 
-import com.io7m.hibiscus.api.HBClientCloseableType;
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBConnectionType;
-import com.io7m.hibiscus.api.HBMessageType;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
 
 /**
  * The type of RPC client handlers.
@@ -34,8 +33,51 @@ public interface HBClientHandlerType<
   M extends HBMessageType,
   P extends HBConnectionParametersType,
   X extends Exception>
-  extends HBClientCloseableType<X>
+  extends HBClientCloseableType<X>, HBIOOperationsType<M, X>
 {
+  /**
+   * @return A function to convert arbitrary exceptions to {@code X}
+   */
+
+  Function<Throwable, X> exceptionTransformer();
+
+  @Override
+  default HBReadType<M> receive(
+    final Duration timeout)
+    throws X, InterruptedException
+  {
+    return this.transport()
+      .receive(timeout);
+  }
+
+  @Override
+  default void send(
+    final M message)
+    throws X, InterruptedException
+  {
+    this.transport()
+      .send(message);
+  }
+
+  @Override
+  default void sendAndForget(
+    final M message)
+    throws X, InterruptedException
+  {
+    this.transport()
+      .sendAndForget(message);
+  }
+
+  @Override
+  default M sendAndWait(
+    final M message,
+    final Duration timeout)
+    throws X, InterruptedException, TimeoutException
+  {
+    return this.transport()
+      .sendAndWait(message, timeout);
+  }
+
   /**
    * Create a new connection to the server.
    *
@@ -44,19 +86,13 @@ public interface HBClientHandlerType<
    * @return The connection result
    */
 
-  HBConnectionResultType<M, P, X> doConnect(
+  HBConnectionResultType<M, P, HBClientHandlerType<M, P, X>, X> doConnect(
     P parameters)
     throws InterruptedException;
 
   /**
-   * @return The connection
+   * @return The underlying transport
    */
 
-  HBConnectionType<M, X> connection();
-
-  @Override
-  default boolean isClosed()
-  {
-    return this.connection().isClosed();
-  }
+  HBTransportType<M, X> transport();
 }

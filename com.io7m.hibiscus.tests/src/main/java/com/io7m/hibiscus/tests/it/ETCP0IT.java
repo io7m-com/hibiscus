@@ -17,6 +17,7 @@
 
 package com.io7m.hibiscus.tests.it;
 
+import com.io7m.hibiscus.api.HBReadReceived;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnected;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnectionFailed;
 import com.io7m.hibiscus.api.HBStateType.HBStateDisconnected;
@@ -26,6 +27,7 @@ import com.io7m.hibiscus.examples.tcp0.ETCP0CommandHello;
 import com.io7m.hibiscus.examples.tcp0.ETCP0Configuration;
 import com.io7m.hibiscus.examples.tcp0.ETCP0ConnectionParameters;
 import com.io7m.hibiscus.examples.tcp0.ETCP0Exception;
+import com.io7m.hibiscus.examples.tcp0.ETCP0MessageType;
 import com.io7m.hibiscus.examples.tcp0.ETCP0ResponseOK;
 import com.io7m.hibiscus.examples.tcp0.ETCP0Server;
 import com.io7m.jmulticlose.core.CloseableCollection;
@@ -148,7 +150,7 @@ public final class ETCP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new ETCP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );
@@ -158,7 +160,7 @@ public final class ETCP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new ETCP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );
@@ -168,7 +170,7 @@ public final class ETCP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new ETCP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );
@@ -234,7 +236,7 @@ public final class ETCP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new ETCP0CommandHello(UUID.randomUUID(), "Chatting"),
           Duration.ofSeconds(1L)
         );
@@ -244,9 +246,11 @@ public final class ETCP0IT
 
     for (int index = 0; index < 5; ++index) {
       final var r =
-        this.client.receive(Duration.ofSeconds(1L))
-          .orElseThrow();
-      assertInstanceOf(ETCP0CommandHello.class, r);
+        this.client.receive(Duration.ofSeconds(1L));
+      assertInstanceOf(
+        ETCP0CommandHello.class,
+        ((HBReadReceived<ETCP0MessageType>) r).message()
+      );
     }
 
     this.client.disconnect();
@@ -336,7 +340,7 @@ public final class ETCP0IT
       this.client.send(new ETCP0CommandHello(UUID.randomUUID(), "Hello!"));
     });
     assertThrows(ETCP0Exception.class, () -> {
-      this.client.ask(
+      this.client.sendAndWait(
         new ETCP0CommandHello(UUID.randomUUID(), "Hello!"),
         Duration.ofSeconds(1L)
       );

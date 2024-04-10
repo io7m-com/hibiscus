@@ -17,17 +17,10 @@
 
 package com.io7m.hibiscus.examples.http0;
 
-import com.io7m.hibiscus.api.HBMessageType;
-
 public sealed interface EHTTP0CommandType
   extends EHTTP0MessageType
   permits EHTTP0CommandHello,
   EHTTP0CommandLogin
 {
-  @Override
-  default boolean isResponseFor(
-    final HBMessageType message)
-  {
-    return false;
-  }
+
 }

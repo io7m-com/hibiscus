@@ -15,37 +15,37 @@
  */
 
 
-package com.io7m.hibiscus.basic;
-
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBMessageType;
+package com.io7m.hibiscus.api;
 
 import java.util.Objects;
 
 /**
- * A connection attempt succeeded.
+ * A connection attempt failed with an exception.
  *
- * @param handlerAndMessage The new handler and the message resulting from the attempt
- * @param <M>               The type of messages
- * @param <P>               The type of connection parameters
- * @param <X>               the type of exceptions
+ * @param exception The exception
+ * @param <M>       The type of messages
+ * @param <P>       The type of connection parameters
+ * @param <R>       The type of extra result values
+ * @param <X>       the type of exceptions
  */
 
-public record HBConnectionSucceeded<
+public record HBConnectionError<
   M extends HBMessageType,
   P extends HBConnectionParametersType,
+  R,
   X extends Exception>(
-  HBClientHandlerAndMessage<M, P, X> handlerAndMessage)
-  implements HBConnectionResultType<M, P, X>
+  Exception exception)
+  implements HBConnectionResultType<M, P, R, X>
 {
+
   /**
-   * A connection attempt succeeded.
+   * A connection attempt failed with an exception.
    *
-   * @param handlerAndMessage The new handler and the message resulting from the attempt
+   * @param exception The exception
    */
 
-  public HBConnectionSucceeded
+  public HBConnectionError
   {
-    Objects.requireNonNull(handlerAndMessage, "handlerAndMessage");
+    Objects.requireNonNull(exception, "exception");
   }
 }

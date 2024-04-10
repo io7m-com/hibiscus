@@ -15,40 +15,35 @@
  */
 
 
-package com.io7m.hibiscus.basic;
-
-import com.io7m.hibiscus.api.HBConnectionParametersType;
-import com.io7m.hibiscus.api.HBMessageType;
+package com.io7m.hibiscus.api;
 
 import java.util.Objects;
 
 /**
- * A new client handler along with the message from the server.
+ * A message was received on the transport that was a direct response to any
+ * message that was previously written.
  *
- * @param newHandler The new handler
- * @param message    The message
- * @param <M>        The type of messages
- * @param <P>        The type of connection parameters
- * @param <X>        the type of exceptions
+ * @param message  The message
+ * @param response The response received
+ * @param <M>      The type of messages
  */
 
-public record HBClientHandlerAndMessage<
-  M extends HBMessageType,
-  P extends HBConnectionParametersType,
-  X extends Exception>(
-  HBClientHandlerType<M, P, X> newHandler,
-  M message)
+public record HBReadResponse<M extends HBMessageType>(
+  M message,
+  M response)
+  implements HBReadType<M>
 {
   /**
-   * A new client handler along with the message from the server.
+   * A message was received on the transport that was a direct response to any
+   * message that was previously written.
    *
-   * @param newHandler The new handler
-   * @param message    The message
+   * @param message  The message
+   * @param response The response received
    */
 
-  public HBClientHandlerAndMessage
+  public HBReadResponse
   {
-    Objects.requireNonNull(newHandler, "newHandler");
     Objects.requireNonNull(message, "message");
+    Objects.requireNonNull(response, "response");
   }
 }

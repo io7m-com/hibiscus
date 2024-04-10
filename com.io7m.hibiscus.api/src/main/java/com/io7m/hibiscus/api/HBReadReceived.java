@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,13 +14,32 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+
+package com.io7m.hibiscus.api;
+
+import java.util.Objects;
+
 /**
- * RPC Client API Specification (Basic client implementation)
+ * A message was received on the transport that wasn't a direct response to any
+ * message that was previously written.
+ *
+ * @param message The message
+ * @param <M>     The type of messages
  */
 
-@Export
-@Version("1.0.0")
-package com.io7m.hibiscus.basic;
+public record HBReadReceived<M extends HBMessageType>(
+  M message)
+  implements HBReadType<M>
+{
+  /**
+   * A message was received on the transport that wasn't a direct response to any
+   * message that was previously written.
+   *
+   * @param message The message
+   */
 
-import org.osgi.annotation.bundle.Export;
-import org.osgi.annotation.versioning.Version;
+  public HBReadReceived
+  {
+    Objects.requireNonNull(message, "message");
+  }
+}

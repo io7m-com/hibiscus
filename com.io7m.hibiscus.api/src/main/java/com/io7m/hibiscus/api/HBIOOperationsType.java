@@ -18,26 +18,37 @@
 package com.io7m.hibiscus.api;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 
 /**
- * A connection abstraction that imposes connection-like semantics on a
- * transport.
+ * The I/O operations.
  *
  * @param <M> The type of messages
  * @param <X> the type of exceptions
- *
- * @see HBTransportType
  */
 
-public interface HBConnectionType<
+public interface HBIOOperationsType<
   M extends HBMessageType,
   X extends Exception>
-  extends HBClientCloseableType<X>
 {
   /**
-   * Send a message to the server without waiting for a response.
+   * Take a message from the transport, if one is available.
+   *
+   * @param timeout The timeout value
+   *
+   * @return The message
+   *
+   * @throws X                    On errors
+   * @throws InterruptedException On interruption
+   */
+
+  HBReadType<M> receive(
+    Duration timeout)
+    throws X, InterruptedException;
+
+  /**
+   * Place a message on the transport. The caller is expected to manually
+   * read back a response later.
    *
    * @param message The message
    *
@@ -49,45 +60,34 @@ public interface HBConnectionType<
     throws X, InterruptedException;
 
   /**
-   * Send a message to the server, waiting until the server sends a response
-   * to the message. If the server has not produced a response for the message
-   * by the time the given {@code timeout} has elapsed, the function produces
-   * a {@link TimeoutException}.
+   * Place a message on the transport. The transport is not required to track
+   * the message for later response resolution; any response to this message
+   * might be returned to the caller as an ordinary message.
    *
    * @param message The message
-   * @param timeout The timeout value
-   * @param <R>     The type of responses
-   *
-   * @return The response
-   *
-   * @throws X                                         On errors
-   * @throws InterruptedException                      On interruption
-   * @throws TimeoutException                          If the server does not produce a response to
-   *                                                   the message
-   * @throws HBConnectionReceiveQueueOverflowException If the internal receive queue overflows
-   */
-
-  <R extends M> R ask(
-    M message,
-    Duration timeout)
-    throws
-    InterruptedException,
-    TimeoutException,
-    HBConnectionReceiveQueueOverflowException,
-    X;
-
-  /**
-   * Read a message from the connection, waiting at most {@code timeout} until
-   * giving up.
-   *
-   * @param timeout The timeout
-   *
-   * @return The message, if any
    *
    * @throws X                    On errors
    * @throws InterruptedException On interruption
    */
 
-  Optional<M> receive(Duration timeout)
+  void sendAndForget(M message)
     throws X, InterruptedException;
+
+  /**
+   * Place a message on the transport and wait for a response.
+   *
+   * @param message The message
+   * @param timeout The timeout
+   *
+   * @return The response
+   *
+   * @throws X                    On errors
+   * @throws InterruptedException On interruption
+   * @throws TimeoutException     If no response is returned within the given timeout
+   */
+
+  M sendAndWait(
+    M message,
+    Duration timeout)
+    throws X, InterruptedException, TimeoutException;
 }

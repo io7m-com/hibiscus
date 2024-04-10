@@ -17,7 +17,7 @@
 
 package com.io7m.hibiscus.examples.udp0;
 
-import com.io7m.hibiscus.basic.HBClientAbstract;
+import com.io7m.hibiscus.api.HBClientAbstract;
 
 import java.time.Clock;
 
@@ -28,8 +28,7 @@ public final class EUDP0Client
   private EUDP0Client()
   {
     super(new EUDP0ClientHandlerDisconnected(
-      Clock.systemUTC(),
-      1000
+      Clock.systemUTC()
     ), EUDP0Exception::new);
   }
 

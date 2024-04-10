@@ -145,7 +145,7 @@ public final class EHTTP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new EHTTP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );
@@ -155,7 +155,7 @@ public final class EHTTP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new EHTTP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );
@@ -165,7 +165,7 @@ public final class EHTTP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new EHTTP0CommandHello(UUID.randomUUID(), "Hello!"),
           Duration.ofSeconds(1L)
         );
@@ -201,7 +201,7 @@ public final class EHTTP0IT
 
     {
       final var r =
-        this.client.ask(
+        this.client.sendAndWait(
           new EHTTP0ResponseOK(UUID.randomUUID(), UUID.randomUUID()),
           Duration.ofSeconds(1L)
         );
@@ -323,7 +323,7 @@ public final class EHTTP0IT
       this.client.send(new EHTTP0CommandHello(UUID.randomUUID(), "Hello!"));
     });
     assertThrows(EHTTP0Exception.class, () -> {
-      this.client.ask(
+      this.client.sendAndWait(
         new EHTTP0CommandHello(UUID.randomUUID(), "Hello!"),
         Duration.ofSeconds(1L)
       );

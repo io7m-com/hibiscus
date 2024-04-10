@@ -17,29 +17,23 @@
 
 package com.io7m.hibiscus.examples.http0;
 
-import com.io7m.hibiscus.api.HBConnection;
-import com.io7m.hibiscus.api.HBConnectionClosed;
-import com.io7m.hibiscus.api.HBConnectionType;
-import com.io7m.hibiscus.api.HBMessageType;
-import com.io7m.hibiscus.basic.HBClientHandlerAndMessage;
-import com.io7m.hibiscus.basic.HBConnectionError;
-import com.io7m.hibiscus.basic.HBConnectionFailed;
-import com.io7m.hibiscus.basic.HBConnectionResultType;
-import com.io7m.hibiscus.basic.HBConnectionSucceeded;
+import com.io7m.hibiscus.api.HBConnectionError;
+import com.io7m.hibiscus.api.HBConnectionFailed;
+import com.io7m.hibiscus.api.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBConnectionSucceeded;
+import com.io7m.hibiscus.api.HBTransportClosed;
+import com.io7m.hibiscus.api.HBTransportType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
-import java.time.Clock;
-import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class EHTTP0ClientHandlerDisconnected
   extends EHTTP0ClientHandlerAbstract
@@ -47,26 +41,19 @@ public final class EHTTP0ClientHandlerDisconnected
   private static final Logger LOG =
     LoggerFactory.getLogger(EHTTP0ClientHandlerDisconnected.class);
 
-  private final HBConnectionClosed<EHTTP0MessageType, EHTTP0Exception> connection;
-  private final int maximumReceiveQueueSize;
-  private final Clock clock;
+  private final HBTransportType<EHTTP0MessageType, EHTTP0Exception> closedTransport;
 
-  EHTTP0ClientHandlerDisconnected(
-    final Clock inClock,
-    final int inMaximumReceiveQueueSize)
+  EHTTP0ClientHandlerDisconnected()
   {
-    this.clock =
-      Objects.requireNonNull(inClock, "inClock");
-    this.maximumReceiveQueueSize =
-      inMaximumReceiveQueueSize;
-    this.connection =
-      new HBConnectionClosed<>(EHTTP0Exception::new);
+    this.closedTransport =
+      new HBTransportClosed<>(EHTTP0Exception::new);
   }
 
   @Override
   public HBConnectionResultType<
     EHTTP0MessageType,
     EHTTP0ConnectionParameters,
+    HBClientHandlerType<EHTTP0MessageType, EHTTP0ConnectionParameters, EHTTP0Exception>,
     EHTTP0Exception>
   doConnect(
     final EHTTP0ConnectionParameters parameters)
@@ -97,51 +84,40 @@ public final class EHTTP0ClientHandlerDisconnected
       boolean keepTransport = false;
 
       try {
-        transport.write(new EHTTP0CommandLogin(
-          UUID.randomUUID(),
-          parameters.user(),
-          parameters.password()
-        ));
+        final var response =
+          transport.sendAndWait(
+            new EHTTP0CommandLogin(
+              UUID.randomUUID(),
+              parameters.user(),
+              parameters.password()
+            ),
+            parameters.connectTimeout()
+          );
 
-        final var responseOpt =
-          transport.read(parameters.connectTimeout());
+        LOG.debug("Response: {}", response);
 
-        LOG.debug("Response: {}", responseOpt);
+        return switch (response) {
+          case final EHTTP0CommandType c -> {
+            yield new HBConnectionFailed<>(c);
+          }
 
-        if (responseOpt.isPresent()) {
-          return switch (responseOpt.get()) {
-            case final EHTTP0CommandType c -> {
-              yield new HBConnectionFailed<>(c);
-            }
+          case final EHTTP0ResponseType r -> {
+            yield switch (r) {
+              case final EHTTP0ResponseFailure f -> {
+                yield new HBConnectionFailed<>(f);
+              }
 
-            case final EHTTP0ResponseType r -> {
-              yield switch (r) {
-                case final EHTTP0ResponseFailure f -> {
-                  yield new HBConnectionFailed<>(f);
-                }
-
-                case final EHTTP0ResponseOK ok -> {
-                  keepTransport = true;
-                  yield new HBConnectionSucceeded<>(
-                    new HBClientHandlerAndMessage<>(
-                      new EHTTP0ClientHandlerConnected(
-                        new HBConnection<>(
-                          this.clock,
-                          transport,
-                          this.maximumReceiveQueueSize
-                        )
-                      ),
-                      ok
-                    )
-                  );
-                }
-              };
-            }
-          };
-        }
-
-        return new HBConnectionError<>(new TimeoutException());
-      } catch (final EHTTP0Exception e) {
+              case final EHTTP0ResponseOK ok -> {
+                keepTransport = true;
+                yield new HBConnectionSucceeded<>(
+                  ok,
+                  new EHTTP0ClientHandlerConnected(transport)
+                );
+              }
+            };
+          }
+        };
+      } catch (final EHTTP0Exception | TimeoutException e) {
         return new HBConnectionError<>(e);
       } finally {
         if (!keepTransport) {
@@ -158,15 +134,21 @@ public final class EHTTP0ClientHandlerDisconnected
   }
 
   @Override
-  public HBConnectionType<EHTTP0MessageType, EHTTP0Exception> connection()
+  public HBTransportType<EHTTP0MessageType, EHTTP0Exception> transport()
   {
-    return this.connection;
+    return this.closedTransport;
+  }
+
+  @Override
+  public boolean isClosed()
+  {
+    return this.closedTransport.isClosed();
   }
 
   @Override
   public void close()
     throws EHTTP0Exception
   {
-    this.connection.close();
+
   }
 }

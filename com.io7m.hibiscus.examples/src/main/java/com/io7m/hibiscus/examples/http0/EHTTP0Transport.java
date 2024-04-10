@@ -17,10 +17,12 @@
 
 package com.io7m.hibiscus.examples.http0;
 
+import com.io7m.hibiscus.api.HBReadNothing;
+import com.io7m.hibiscus.api.HBReadType;
+import com.io7m.hibiscus.api.HBReadResponse;
 import com.io7m.hibiscus.api.HBTransportType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -28,19 +30,23 @@ import java.net.http.HttpResponse;
 import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public final class EHTTP0Transport
   implements HBTransportType<EHTTP0MessageType, EHTTP0Exception>
 {
-  private static final Logger LOG =
-    LoggerFactory.getLogger(EHTTP0Transport.class);
-
-  private final LinkedBlockingQueue<EHTTP0MessageType> inbox;
+  private final LinkedBlockingQueue<MessageAndResponse> inbox;
   private final HttpClient http;
   private final URI target;
+
+  private record MessageAndResponse(
+    EHTTP0MessageType message,
+    EHTTP0MessageType response)
+  {
+
+  }
 
   EHTTP0Transport(
     final HttpClient inHttp,
@@ -55,7 +61,7 @@ public final class EHTTP0Transport
   }
 
   @Override
-  public Optional<EHTTP0MessageType> read(
+  public HBReadType<EHTTP0MessageType> receive(
     final Duration timeout)
     throws EHTTP0Exception, InterruptedException
   {
@@ -64,40 +70,90 @@ public final class EHTTP0Transport
     if (this.isClosed()) {
       throw new EHTTP0Exception(new ClosedChannelException());
     }
-    return Optional.ofNullable(
-      this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS)
-    );
+
+    final var r =
+      this.inbox.poll(timeout.toNanos(), TimeUnit.NANOSECONDS);
+
+    if (r == null) {
+      return new HBReadNothing<>();
+    }
+    return new HBReadResponse<>(r.message(), r.response());
   }
 
   @Override
-  public void write(
+  public void send(
     final EHTTP0MessageType message)
-    throws EHTTP0Exception
+    throws EHTTP0Exception, InterruptedException
   {
     final var data =
       EHTTP0Messages.toBytes(message);
 
-    final var future =
-      this.http.sendAsync(
+    final HttpResponse<byte[]> httpResponse;
+    try {
+      httpResponse = this.http.send(
         HttpRequest.newBuilder()
           .uri(this.target)
           .POST(HttpRequest.BodyPublishers.ofByteArray(data))
           .build(),
         HttpResponse.BodyHandlers.ofByteArray()
       );
+    } catch (final IOException e) {
+      throw new EHTTP0Exception(e);
+    }
 
-    future.whenComplete((httpResponse, throwable) -> {
-      LOG.debug("httpResponse: {}", httpResponse);
-      LOG.debug("throwable:      ", throwable);
+    this.inbox.add(
+      new MessageAndResponse(
+        message,
+        EHTTP0Messages.fromBytes(httpResponse.body())
+      )
+    );
+  }
 
-      if (httpResponse != null) {
-        try {
-          this.inbox.add(EHTTP0Messages.fromBytes(httpResponse.body()));
-        } catch (final EHTTP0Exception e) {
-          future.completeExceptionally(e);
-        }
-      }
-    });
+  @Override
+  public void sendAndForget(
+    final EHTTP0MessageType message)
+    throws EHTTP0Exception, InterruptedException
+  {
+    final var data =
+      EHTTP0Messages.toBytes(message);
+
+    try {
+      this.http.send(
+        HttpRequest.newBuilder()
+          .uri(this.target)
+          .POST(HttpRequest.BodyPublishers.ofByteArray(data))
+          .build(),
+        HttpResponse.BodyHandlers.discarding()
+      );
+    } catch (final IOException e) {
+      throw new EHTTP0Exception(e);
+    }
+  }
+
+  @Override
+  public EHTTP0MessageType sendAndWait(
+    final EHTTP0MessageType message,
+    final Duration timeout)
+    throws EHTTP0Exception, InterruptedException, TimeoutException
+  {
+    final var data =
+      EHTTP0Messages.toBytes(message);
+
+    final HttpResponse<byte[]> httpResponse;
+    try {
+      httpResponse = this.http.send(
+        HttpRequest.newBuilder()
+          .uri(this.target)
+          .POST(HttpRequest.BodyPublishers.ofByteArray(data))
+          .timeout(timeout)
+          .build(),
+        HttpResponse.BodyHandlers.ofByteArray()
+      );
+    } catch (final IOException e) {
+      throw new EHTTP0Exception(e);
+    }
+
+    return EHTTP0Messages.fromBytes(httpResponse.body());
   }
 
   @Override

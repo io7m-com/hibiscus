@@ -14,30 +14,24 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-package com.io7m.hibiscus.basic;
 
-import java.util.concurrent.Executor;
+package com.io7m.hibiscus.api;
 
 /**
- * An executor that executes on the calling thread.
+ * The result of opening a connection.
+ *
+ * @param <M> The type of messages
+ * @param <P> The type of connection parameters
+ * @param <R> The type of extra result values
+ * @param <X> the type of exceptions
  */
 
-public final class HBDirectExecutor
-  implements Executor
+public sealed interface HBConnectionResultType<
+  M extends HBMessageType,
+  P extends HBConnectionParametersType,
+  R,
+  X extends Exception>
+  permits HBConnectionError, HBConnectionFailed, HBConnectionSucceeded
 {
-  /**
-   * An executor that executes on the calling thread.
-   */
 
-  public HBDirectExecutor()
-  {
-
-  }
-
-  @Override
-  public void execute(
-    final Runnable command)
-  {
-    command.run();
-  }
 }

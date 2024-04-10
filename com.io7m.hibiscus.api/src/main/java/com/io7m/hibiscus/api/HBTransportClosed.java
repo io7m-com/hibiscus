@@ -17,34 +17,33 @@
 
 package com.io7m.hibiscus.api;
 
-import java.nio.channels.NotYetConnectedException;
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * An always-closed connection.
+ * A permanently closed transport.
  *
  * @param <M> The type of messages
  * @param <X> The type of exceptions
  */
 
-public final class HBConnectionClosed<
+public final class HBTransportClosed<
   M extends HBMessageType,
   X extends Exception>
-  implements HBConnectionType<M, X>
+  implements HBTransportType<M, X>
 {
-  private final Function<Exception, X> exceptions;
+  private final Function<Throwable, X> exceptions;
 
   /**
-   * An always-closed connection.
+   * A permanently closed transport.
    *
-   * @param inExceptions A function to construct exceptions of type {@code X}
+   * @param inExceptions An exception supplier
    */
 
-  public HBConnectionClosed(
-    final Function<Exception, X> inExceptions)
+  public HBTransportClosed(
+    final Function<Throwable, X> inExceptions)
   {
     this.exceptions =
       Objects.requireNonNull(inExceptions, "exceptions");
@@ -64,27 +63,35 @@ public final class HBConnectionClosed<
   }
 
   @Override
+  public HBReadType<M> receive(
+    final Duration timeout)
+    throws X, InterruptedException
+  {
+    throw this.exceptions.apply(new ClosedChannelException());
+  }
+
+  @Override
   public void send(
     final M message)
     throws X, InterruptedException
   {
-    throw this.exceptions.apply(new NotYetConnectedException());
+    throw this.exceptions.apply(new ClosedChannelException());
   }
 
   @Override
-  public <R extends M> R ask(
+  public void sendAndForget(
+    final M message)
+    throws X
+  {
+    throw this.exceptions.apply(new ClosedChannelException());
+  }
+
+  @Override
+  public M sendAndWait(
     final M message,
     final Duration timeout)
     throws X
   {
-    throw this.exceptions.apply(new NotYetConnectedException());
-  }
-
-  @Override
-  public Optional<M> receive(
-    final Duration timeout)
-    throws X, InterruptedException
-  {
-    throw this.exceptions.apply(new NotYetConnectedException());
+    throw this.exceptions.apply(new ClosedChannelException());
   }
 }

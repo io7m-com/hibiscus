@@ -17,9 +17,6 @@
 
 package com.io7m.hibiscus.api;
 
-import java.time.Duration;
-import java.util.Optional;
-
 /**
  * The type of transports for reading and writing messages.
  *
@@ -30,31 +27,7 @@ import java.util.Optional;
 public interface HBTransportType<
   M extends HBMessageType,
   X extends Exception>
-  extends HBClientCloseableType<X>
+  extends HBClientCloseableType<X>, HBIOOperationsType<M, X>
 {
-  /**
-   * Take a message from the transport, if one is available.
-   *
-   * @param timeout The timeout value
-   *
-   * @return The message
-   *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
-   */
 
-  Optional<M> read(
-    Duration timeout)
-    throws X, InterruptedException;
-
-  /**
-   * Place a message on the transport.
-   *
-   * @param message The message
-   *
-   * @throws X On errors
-   */
-
-  void write(M message)
-    throws X;
 }

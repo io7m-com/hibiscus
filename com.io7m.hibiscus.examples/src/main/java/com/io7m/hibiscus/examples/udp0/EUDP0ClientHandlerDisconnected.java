@@ -17,50 +17,47 @@
 
 package com.io7m.hibiscus.examples.udp0;
 
-import com.io7m.hibiscus.api.HBConnection;
-import com.io7m.hibiscus.api.HBConnectionClosed;
-import com.io7m.hibiscus.api.HBConnectionType;
-import com.io7m.hibiscus.basic.HBClientHandlerAndMessage;
-import com.io7m.hibiscus.basic.HBConnectionError;
-import com.io7m.hibiscus.basic.HBConnectionFailed;
-import com.io7m.hibiscus.basic.HBConnectionResultType;
-import com.io7m.hibiscus.basic.HBConnectionSucceeded;
-import com.io7m.hibiscus.examples.tcp0.ETCP0Exception;
-import com.io7m.hibiscus.examples.tcp0.ETCP0MessageType;
+import com.io7m.hibiscus.api.HBConnectionError;
+import com.io7m.hibiscus.api.HBConnectionFailed;
+import com.io7m.hibiscus.api.HBConnectionResultType;
+import com.io7m.hibiscus.api.HBConnectionSucceeded;
+import com.io7m.hibiscus.api.HBTransportClosed;
+import com.io7m.hibiscus.api.HBTransportType;
+import com.io7m.hibiscus.api.HBClientHandlerType;
+import com.io7m.hibiscus.examples.http0.EHTTP0ClientHandlerDisconnected;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.time.Clock;
-import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class EUDP0ClientHandlerDisconnected
   extends EUDP0ClientHandlerAbstract
 {
-  private final HBConnectionClosed<EUDP0MessageType, EUDP0Exception> connection;
+  private static final Logger LOG =
+    LoggerFactory.getLogger(EHTTP0ClientHandlerDisconnected.class);
+
+  private final HBTransportClosed<EUDP0MessageType, EUDP0Exception> transportClosed;
   private final Clock clock;
-  private final int maximumReceiveQueueSize;
 
   EUDP0ClientHandlerDisconnected(
-    final Clock inClock,
-    final int inMaximumReceiveQueueSize)
+    final Clock inClock)
   {
     this.clock =
       Objects.requireNonNull(inClock, "inClock");
-    this.maximumReceiveQueueSize =
-      inMaximumReceiveQueueSize;
-    this.connection =
-      new HBConnectionClosed<>(EUDP0Exception::new);
+    this.transportClosed =
+      new HBTransportClosed<>(EUDP0Exception::new);
   }
 
   @Override
   public HBConnectionResultType<
     EUDP0MessageType,
     EUDP0ConnectionParameters,
+    HBClientHandlerType<EUDP0MessageType, EUDP0ConnectionParameters, EUDP0Exception>,
     EUDP0Exception>
   doConnect(
     final EUDP0ConnectionParameters parameters)
@@ -72,54 +69,45 @@ public final class EUDP0ClientHandlerDisconnected
       final var socket =
         new DatagramSocket();
       final var transport =
-        new EUDP0Transport(parameters.address(), socket);
+        new EUDP0Transport(this.clock, parameters.address(), socket);
 
       boolean keepTransport = false;
 
       try {
-        transport.write(new EUDP0CommandLogin(
-          UUID.randomUUID(),
-          parameters.user(),
-          parameters.password()
-        ));
+        final var response =
+          transport.sendAndWait(
+            new EUDP0CommandLogin(
+              UUID.randomUUID(),
+              parameters.user(),
+              parameters.password()
+            ),
+            parameters.connectTimeout()
+          );
 
-        final var responseOpt =
-          transport.read(parameters.connectTimeout());
+        LOG.debug("Response: {}", response);
 
-        if (responseOpt.isPresent()) {
-          return switch (responseOpt.get()) {
-            case final EUDP0CommandType c -> {
-              yield new HBConnectionFailed<>(c);
-            }
+        return switch (response) {
+          case final EUDP0CommandType c -> {
+            yield new HBConnectionFailed<>(c);
+          }
 
-            case final EUDP0ResponseType r -> {
-              yield switch (r) {
-                case final EUDP0ResponseFailure f -> {
-                  yield new HBConnectionFailed<>(f);
-                }
+          case final EUDP0ResponseType r -> {
+            yield switch (r) {
+              case final EUDP0ResponseFailure f -> {
+                yield new HBConnectionFailed<>(f);
+              }
 
-                case final EUDP0ResponseOK ok -> {
-                  keepTransport = true;
-                  yield new HBConnectionSucceeded<>(
-                    new HBClientHandlerAndMessage<>(
-                      new EUDP0ClientHandlerConnected(
-                        new HBConnection<>(
-                          this.clock,
-                          transport,
-                          this.maximumReceiveQueueSize
-                        )
-                      ),
-                      ok
-                    )
-                  );
-                }
-              };
-            }
-          };
-        }
-
-        return new HBConnectionError<>(new TimeoutException());
-      } catch (final EUDP0Exception e) {
+              case final EUDP0ResponseOK ok -> {
+                keepTransport = true;
+                yield new HBConnectionSucceeded<>(
+                  ok,
+                  new EUDP0ClientHandlerConnected(transport)
+                );
+              }
+            };
+          }
+        };
+      } catch (final EUDP0Exception | TimeoutException e) {
         return new HBConnectionError<>(e);
       } finally {
         if (!keepTransport) {
@@ -136,15 +124,21 @@ public final class EUDP0ClientHandlerDisconnected
   }
 
   @Override
-  public HBConnectionType<EUDP0MessageType, EUDP0Exception> connection()
+  public HBTransportType<EUDP0MessageType, EUDP0Exception> transport()
   {
-    return this.connection;
+    return this.transportClosed;
+  }
+
+  @Override
+  public boolean isClosed()
+  {
+    return this.transportClosed.isClosed();
   }
 
   @Override
   public void close()
     throws EUDP0Exception
   {
-    this.connection.close();
+    this.transportClosed.close();
   }
 }

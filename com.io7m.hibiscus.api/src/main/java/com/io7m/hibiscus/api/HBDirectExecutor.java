@@ -1,5 +1,5 @@
 /*
- * Copyright © 2023 Mark Raynsford <code@io7m.com> https://www.io7m.com
+ * Copyright © 2024 Mark Raynsford <code@io7m.com> https://www.io7m.com
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,19 +14,30 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+package com.io7m.hibiscus.api;
+
+import java.util.concurrent.Executor;
+
 /**
- * RPC Client API Specification (Basic implementation)
+ * An executor that executes on the calling thread.
  */
 
-module com.io7m.hibiscus.basic
+public final class HBDirectExecutor
+  implements Executor
 {
-  requires static org.osgi.annotation.bundle;
-  requires static org.osgi.annotation.versioning;
+  /**
+   * An executor that executes on the calling thread.
+   */
 
-  requires transitive com.io7m.hibiscus.api;
+  public HBDirectExecutor()
+  {
 
-  requires com.io7m.jcip.annotations;
-  requires org.slf4j;
+  }
 
-  exports com.io7m.hibiscus.basic;
+  @Override
+  public void execute(
+    final Runnable command)
+  {
+    command.run();
+  }
 }

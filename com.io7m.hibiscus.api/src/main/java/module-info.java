@@ -23,5 +23,8 @@ module com.io7m.hibiscus.api
   requires static org.osgi.annotation.bundle;
   requires static org.osgi.annotation.versioning;
 
+  requires com.io7m.jcip.annotations;
+  requires org.slf4j;
+
   exports com.io7m.hibiscus.api;
 }

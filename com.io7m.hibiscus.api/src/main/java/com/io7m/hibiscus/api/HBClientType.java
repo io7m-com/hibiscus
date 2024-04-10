@@ -16,10 +16,7 @@
 
 package com.io7m.hibiscus.api;
 
-import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.Flow;
-import java.util.concurrent.TimeoutException;
 
 /**
  * The type of RPC clients.
@@ -33,7 +30,7 @@ public interface HBClientType<
   M extends HBMessageType,
   P extends HBConnectionParametersType,
   X extends Exception>
-  extends HBClientCloseableType<X>
+  extends HBClientCloseableType<X>, HBIOOperationsType<M, X>
 {
   /**
    * @return The current client state
@@ -58,54 +55,8 @@ public interface HBClientType<
    * @throws InterruptedException On interruption
    */
 
-  Optional<M> connect(
+  HBConnectionResultType<M, P, ?, X> connect(
     P parameters)
-    throws X, InterruptedException;
-
-  /**
-   * Send a message to the server without waiting for a response.
-   *
-   * @param message The message
-   *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
-   */
-
-  void send(M message)
-    throws X, InterruptedException;
-
-  /**
-   * Send a message to the server, waiting until the server sends a response
-   * to the message.
-   *
-   * @param message The message
-   * @param timeout The maximum timeout to wait for a response
-   * @param <R>     The type of responses
-   *
-   * @return The response
-   *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
-   */
-
-  <R extends M> R ask(
-    M message,
-    Duration timeout)
-    throws X, InterruptedException, TimeoutException;
-
-  /**
-   * Read a message from the connection, waiting at most {@code timeout} until
-   * giving up.
-   *
-   * @param timeout The timeout
-   *
-   * @return The message, if any
-   *
-   * @throws X                    On errors
-   * @throws InterruptedException On interruption
-   */
-
-  Optional<M> receive(Duration timeout)
     throws X, InterruptedException;
 
   /**

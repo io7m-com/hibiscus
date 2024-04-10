@@ -17,9 +17,7 @@
 
 package com.io7m.hibiscus.examples.http0;
 
-import com.io7m.hibiscus.basic.HBClientAbstract;
-
-import java.time.Clock;
+import com.io7m.hibiscus.api.HBClientAbstract;
 
 public final class EHTTP0Client
   extends HBClientAbstract<EHTTP0MessageType, EHTTP0ConnectionParameters, EHTTP0Exception>
@@ -27,10 +25,7 @@ public final class EHTTP0Client
 {
   private EHTTP0Client()
   {
-    super(new EHTTP0ClientHandlerDisconnected(
-      Clock.systemUTC(),
-      1000
-    ), EHTTP0Exception::new);
+    super(new EHTTP0ClientHandlerDisconnected(), EHTTP0Exception::new);
   }
 
   public static EHTTP0ClientType create(

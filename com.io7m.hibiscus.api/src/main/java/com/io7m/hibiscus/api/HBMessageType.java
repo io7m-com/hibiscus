@@ -22,12 +22,5 @@ package com.io7m.hibiscus.api;
 
 public interface HBMessageType
 {
-  /**
-   * @param message The message
-   *
-   * @return {@code true} if this message is a response for the given message
-   */
 
-  boolean isResponseFor(
-    HBMessageType message);
 }
