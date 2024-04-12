@@ -25,7 +25,7 @@ public final class EHTTP0Client
 {
   private EHTTP0Client()
   {
-    super(new EHTTP0ClientHandlerDisconnected(), EHTTP0Exception::new);
+    super(new EHTTP0ClientHandlerDisconnected());
   }
 
   public static EHTTP0ClientType create(

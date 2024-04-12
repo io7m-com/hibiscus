@@ -29,7 +29,7 @@ public final class ETCP0Client
   {
     super(new ETCP0ClientHandlerDisconnected(
       Clock.systemUTC()
-    ), ETCP0Exception::new);
+    ));
   }
 
   public static ETCP0ClientType create(

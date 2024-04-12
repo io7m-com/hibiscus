@@ -29,7 +29,7 @@ public final class EUDP0Client
   {
     super(new EUDP0ClientHandlerDisconnected(
       Clock.systemUTC()
-    ), EUDP0Exception::new);
+    ));
   }
 
   public static EUDP0ClientType create(

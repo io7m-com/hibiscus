@@ -20,10 +20,10 @@ package com.io7m.hibiscus.api;
 import com.io7m.hibiscus.api.HBStateType.HBStateClosed;
 import com.io7m.hibiscus.api.HBStateType.HBStateClosing;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnected;
+import com.io7m.hibiscus.api.HBStateType.HBStateConnecting;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnectionFailed;
 import com.io7m.hibiscus.api.HBStateType.HBStateConnectionSucceeded;
 import com.io7m.hibiscus.api.HBStateType.HBStateDisconnected;
-import com.io7m.hibiscus.api.HBStateType.HBStateConnecting;
 import net.jcip.annotations.GuardedBy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.concurrent.Flow;
 import java.util.concurrent.SubmissionPublisher;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 
 /**
  * An abstract client implementation.
@@ -55,22 +54,18 @@ public abstract class HBClientAbstract<
 
   private final Object stateLock;
   private final HBClientHandlerType<M, P, X> disconnectedHandler;
-  private final Function<Exception, X> exceptions;
   private volatile HBClientHandlerType<M, P, X> handler;
   @GuardedBy("stateLock")
   private HBStateType stateNow;
   private final SubmissionPublisher<HBStateType> statePublisher;
 
   protected HBClientAbstract(
-    final HBClientHandlerType<M, P, X> inHandler,
-    final Function<Exception, X> inExceptions)
+    final HBClientHandlerType<M, P, X> inHandler)
   {
     this.handler =
       Objects.requireNonNull(inHandler, "disconnectedHandler");
     this.disconnectedHandler =
       Objects.requireNonNull(inHandler, "disconnectedHandler");
-    this.exceptions =
-      Objects.requireNonNull(inExceptions, "inExceptions");
 
     this.statePublisher =
       new SubmissionPublisher<>(
@@ -88,6 +83,11 @@ public abstract class HBClientAbstract<
     synchronized (this.stateLock) {
       return this.stateNow;
     }
+  }
+
+  protected final HBClientHandlerType<M, P, X> handler()
+  {
+    return this.handler;
   }
 
   @Override
