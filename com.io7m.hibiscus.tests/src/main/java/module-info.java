@@ -14,16 +14,23 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+/**
+ * RPC Client API Specification (Test suite)
+ */
+
 open module com.io7m.hibiscus.tests
 {
-  requires transitive com.io7m.hibiscus.api;
-  requires transitive com.io7m.hibiscus.basic;
-
-  requires java.net.http;
-  requires org.slf4j;
-
   requires transitive org.junit.jupiter.api;
   requires transitive org.junit.jupiter.engine;
   requires transitive org.junit.platform.commons;
   requires transitive org.junit.platform.engine;
+
+  requires org.mockito;
+
+  requires com.io7m.hibiscus.api;
+  requires com.io7m.jmulticlose.core;
+  requires org.slf4j;
+  requires com.io7m.hibiscus.examples;
+
+  exports com.io7m.hibiscus.tests.it;
 }

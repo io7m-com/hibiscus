@@ -8,12 +8,12 @@
   <parent>
     <groupId>com.io7m.primogenitor</groupId>
     <artifactId>com.io7m.primogenitor.full</artifactId>
-    <version>7.6.0</version>
+    <version>8.2.0</version>
   </parent>
 
   <groupId>com.io7m.hibiscus</groupId>
   <artifactId>com.io7m.hibiscus</artifactId>
-  <version>0.0.8</version>
+  <version>1.0.0-beta0001</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.hibiscus</name>
@@ -22,16 +22,23 @@
 
   <modules>
     <module>com.io7m.hibiscus.api</module>
-    <module>com.io7m.hibiscus.basic</module>
+    <module>com.io7m.hibiscus.examples</module>
     <module>com.io7m.hibiscus.tests</module>
   </modules>
 
   <properties>
-    <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
+    <!-- Configuration. -->
+    <io7m.api.previousVersion>1.0.0-beta0001</io7m.api.previousVersion>
+    <io7m.java.targetJavaVersion>21</io7m.java.targetJavaVersion>
+
+    <!-- io7m dependencies. -->
     <com.io7m.jxtrand.version>1.1.0</com.io7m.jxtrand.version>
-    <io7m.api.previousVersion>0.0.8-SNAPSHOT</io7m.api.previousVersion>
-    <junit.version>5.9.3</junit.version>
-    <jqwik.version>1.7.3</jqwik.version>
+    <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
+
+    <!-- Third-party dependencies. -->
+    <jqwik.version>1.8.4</jqwik.version>
+    <junit.version>5.10.2</junit.version>
+    <helidon.version>4.0.7</helidon.version>
   </properties>
 
   <licenses>
@@ -91,17 +98,17 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>2.0.7</version>
+        <version>2.0.12</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.4.7</version>
+        <version>1.5.3</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.lanark</groupId>
         <artifactId>com.io7m.lanark.core</artifactId>
-        <version>1.0.0-beta0001</version>
+        <version>1.1.0</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.jdeferthrow</groupId>
@@ -118,6 +125,11 @@
         <artifactId>com.io7m.jcip.annotations</artifactId>
         <version>2.0.0</version>
       </dependency>
+      <dependency>
+        <groupId>com.io7m.jmulticlose</groupId>
+        <artifactId>com.io7m.jmulticlose.core</artifactId>
+        <version>1.1.2</version>
+      </dependency>
 
       <!-- OSGi metadata and build. -->
       <dependency>
@@ -133,14 +145,14 @@
       <dependency>
         <groupId>com.io7m.primogenitor</groupId>
         <artifactId>com.io7m.primogenitor.support</artifactId>
-        <version>7.6.0</version>
+        <version>8.2.0</version>
       </dependency>
 
       <!-- Test suite. -->
       <dependency>
         <groupId>com.io7m.quixote</groupId>
         <artifactId>com.io7m.quixote.core</artifactId>
-        <version>0.0.2</version>
+        <version>1.2.0</version>
       </dependency>
       <dependency>
         <groupId>net.jqwik</groupId>
@@ -163,9 +175,35 @@
         <version>${junit.version}</version>
       </dependency>
       <dependency>
+        <groupId>com.io7m.percentpass</groupId>
+        <artifactId>com.io7m.percentpass.extension</artifactId>
+        <version>0.0.3</version>
+      </dependency>
+
+      <!-- Mockito -->
+      <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.3.1</version>
+        <version>5.11.0</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy-agent</artifactId>
+        <version>1.14.13</version>
+      </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.14.13</version>
+      </dependency>
+
+      <!-- Web server. -->
+      <dependency>
+        <groupId>io.helidon</groupId>
+        <artifactId>helidon-bom</artifactId>
+        <type>pom</type>
+        <version>${helidon.version}</version>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

@@ -20,20 +20,9 @@ import java.util.concurrent.Flow;
 
 /**
  * Status information for a client.
- *
- * @param <C>  The type of commands sent by the client
- * @param <R>  The type of responses returned from the server
- * @param <RF> The type of responses returned that indicate failed commands
- * @param <CR> The type of credentials
- * @param <E>  The type of events
  */
 
-public interface HBClientStatusType<
-  C extends HBCommandType,
-  R extends HBResponseType,
-  RF extends R,
-  E extends HBEventType,
-  CR extends HBCredentialsType>
+public interface HBClientStatusType
 {
   /**
    * @return {@code true} if the client is connected
@@ -42,20 +31,14 @@ public interface HBClientStatusType<
   boolean isConnected();
 
   /**
-   * @return A stream of events received from the server
-   */
-
-  Flow.Publisher<E> events();
-
-  /**
    * @return A stream of state updates for the client
    */
 
-  Flow.Publisher<HBStateType<C, R, RF, CR>> state();
+  Flow.Publisher<HBStateType> state();
 
   /**
    * @return The value of {@link #state()} right now
    */
 
-  HBStateType<C, R, RF, CR> stateNow();
+  HBStateType stateNow();
 }

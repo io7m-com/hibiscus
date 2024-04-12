@@ -19,31 +19,31 @@ package com.io7m.hibiscus.api;
 /**
  * A factory of clients.
  *
- * @param <X>  The type of exceptions that can be raised by clients
- * @param <G>  The type of client configuration values
- * @param <C>  The type of commands sent to the server by the client
- * @param <R>  The type of responses returned from the server
- * @param <RS> The type of success responses returned from the server
- * @param <RF> The type of failure responses returned from the server
- * @param <E>  The type of events received from the server
- * @param <CR> The type of credentials
- * @param <LA> The type of asynchronous clients
- * @param <LS> The type of synchronous clients
+ * @param <C> The type of configurations
+ * @param <M> The type of messages
+ * @param <P> The type of connection parameters
+ * @param <T> The type of clients
+ * @param <X> the type of exceptions
  */
 
 public interface HBClientFactoryType<
-  X extends Exception,
-  G extends HBConfigurationType,
-  C extends HBCommandType,
-  R extends HBResponseType,
-  RS extends R,
-  RF extends R,
-  E extends HBEventType,
-  CR extends HBCredentialsType,
-  LA extends HBClientAsynchronousType<X, C, R, RS, RF, E, CR>,
-  LS extends HBClientSynchronousType<X, C, R, RS, RF, E, CR>>
-  extends HBClientAsynchronousFactoryType<X, G, C, R, RS, RF, E, CR, LA>,
-  HBClientSynchronousFactoryType<X, G, C, R, RS, RF, E, CR, LS>
+  C extends HBConfigurationType,
+  M extends HBMessageType,
+  P extends HBConnectionParametersType,
+  T extends HBClientType<M, P, X>,
+  X extends Exception>
 {
+  /**
+   * Create a new client.
+   *
+   * @param configuration The client configuration
+   *
+   * @return The new client
+   *
+   * @throws X On errors
+   */
 
+  T create(
+    C configuration)
+    throws X;
 }
