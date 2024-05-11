@@ -49,7 +49,7 @@
   </licenses>
 
   <scm>
-    <url>https://www.github.com/io7m/hibiscus</url>
+    <url>https://www.github.com/io7m-com/hibiscus</url>
     <connection>scm:git:https://www.github.com/io7m-com/hibiscus</connection>
     <developerConnection>scm:git:https://www.github.com/io7m-com/hibiscus</developerConnection>
   </scm>
@@ -64,7 +64,7 @@
   </developers>
 
   <issueManagement>
-    <url>https://www.github.com/io7m/hibiscus/issues</url>
+    <url>https://www.github.com/io7m-com/hibiscus/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
 
