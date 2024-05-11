@@ -13,12 +13,12 @@
 
   <groupId>com.io7m.hibiscus</groupId>
   <artifactId>com.io7m.hibiscus</artifactId>
-  <version>1.0.0-beta0001</version>
+  <version>1.0.0</version>
 
   <packaging>pom</packaging>
   <name>com.io7m.hibiscus</name>
   <description>RPC Client API Specification</description>
-  <url>https://www.github.com/io7m/hibiscus</url>
+  <url>https://www.io7m.com/software/hibiscus</url>
 
   <modules>
     <module>com.io7m.hibiscus.api</module>
@@ -28,7 +28,7 @@
 
   <properties>
     <!-- Configuration. -->
-    <io7m.api.previousVersion>1.0.0-beta0001</io7m.api.previousVersion>
+    <io7m.api.previousVersion>1.0.0</io7m.api.previousVersion>
     <io7m.java.targetJavaVersion>21</io7m.java.targetJavaVersion>
 
     <!-- io7m dependencies. -->
@@ -38,7 +38,7 @@
     <!-- Third-party dependencies. -->
     <jqwik.version>1.8.4</jqwik.version>
     <junit.version>5.10.2</junit.version>
-    <helidon.version>4.0.7</helidon.version>
+    <helidon.version>4.0.8</helidon.version>
   </properties>
 
   <licenses>
@@ -49,9 +49,9 @@
   </licenses>
 
   <scm>
-    <url>https://www.github.com/io7m/hibiscus</url>
-    <connection>scm:git:https://github.com/io7m/hibiscus</connection>
-    <developerConnection>scm:git:https://github.com/io7m/hibiscus</developerConnection>
+    <url>https://www.github.com/io7m-com/hibiscus</url>
+    <connection>scm:git:https://www.github.com/io7m-com/hibiscus</connection>
+    <developerConnection>scm:git:https://www.github.com/io7m-com/hibiscus</developerConnection>
   </scm>
 
   <developers>
@@ -64,7 +64,7 @@
   </developers>
 
   <issueManagement>
-    <url>https://www.github.com/io7m/hibiscus/issues</url>
+    <url>https://www.github.com/io7m-com/hibiscus/issues</url>
     <system>GitHub Issues</system>
   </issueManagement>
 
@@ -98,37 +98,37 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
-        <version>2.0.12</version>
+        <version>2.0.13</version>
       </dependency>
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.5.3</version>
+        <version>1.5.6</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.lanark</groupId>
         <artifactId>com.io7m.lanark.core</artifactId>
-        <version>1.1.0</version>
+        <version>1.2.0</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.jdeferthrow</groupId>
         <artifactId>com.io7m.jdeferthrow.core</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.junreachable</groupId>
         <artifactId>com.io7m.junreachable.core</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.2</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.jcip</groupId>
-        <artifactId>com.io7m.jcip.annotations</artifactId>
-        <version>2.0.0</version>
+        <artifactId>com.io7m.jcip</artifactId>
+        <version>2.0.1</version>
       </dependency>
       <dependency>
         <groupId>com.io7m.jmulticlose</groupId>
         <artifactId>com.io7m.jmulticlose.core</artifactId>
-        <version>1.1.2</version>
+        <version>1.1.3</version>
       </dependency>
 
       <!-- OSGi metadata and build. -->
@@ -152,7 +152,7 @@
       <dependency>
         <groupId>com.io7m.quixote</groupId>
         <artifactId>com.io7m.quixote.core</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
       </dependency>
       <dependency>
         <groupId>net.jqwik</groupId>
@@ -184,17 +184,17 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>5.11.0</version>
+        <version>5.12.0</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.14.13</version>
+        <version>1.14.15</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.14.13</version>
+        <version>1.14.15</version>
       </dependency>
 
       <!-- Web server. -->

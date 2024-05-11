@@ -9,14 +9,14 @@
   <parent>
     <artifactId>com.io7m.hibiscus</artifactId>
     <groupId>com.io7m.hibiscus</groupId>
-    <version>1.0.0-beta0001</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>com.io7m.hibiscus.api</artifactId>
 
   <packaging>jar</packaging>
   <name>com.io7m.hibiscus.api</name>
   <description>RPC Client API Specification (API)</description>
-  <url>https://www.github.com/io7m/hibiscus</url>
+  <url>https://www.io7m.com/software/hibiscus</url>
 
   <dependencies>
     <dependency>
@@ -25,7 +25,7 @@
     </dependency>
     <dependency>
       <groupId>com.io7m.jcip</groupId>
-      <artifactId>com.io7m.jcip.annotations</artifactId>
+      <artifactId>com.io7m.jcip</artifactId>
     </dependency>
 
     <dependency>

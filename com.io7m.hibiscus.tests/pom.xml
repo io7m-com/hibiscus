@@ -9,14 +9,14 @@
   <parent>
     <artifactId>com.io7m.hibiscus</artifactId>
     <groupId>com.io7m.hibiscus</groupId>
-    <version>1.0.0-beta0001</version>
+    <version>1.0.0</version>
   </parent>
   <artifactId>com.io7m.hibiscus.tests</artifactId>
 
   <packaging>jar</packaging>
   <name>com.io7m.hibiscus.tests</name>
   <description>RPC Client API Specification (Test suite)</description>
-  <url>https://www.github.com/io7m/hibiscus</url>
+  <url>https://www.io7m.com/software/hibiscus</url>
 
   <properties>
     <mdep.analyze.skip>true</mdep.analyze.skip>
