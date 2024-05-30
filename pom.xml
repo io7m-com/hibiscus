@@ -36,9 +36,10 @@
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
 
     <!-- Third-party dependencies. -->
+    <helidon.version>4.0.8</helidon.version>
     <jqwik.version>1.8.5</jqwik.version>
     <junit.version>5.10.2</junit.version>
-    <helidon.version>4.0.8</helidon.version>
+    <net.byte-buddy.version>1.14.16</net.byte-buddy.version>
   </properties>
 
   <licenses>
@@ -165,14 +166,11 @@
         <version>${jqwik.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
         <version>${junit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-engine</artifactId>
-        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.io7m.percentpass</groupId>
@@ -189,12 +187,12 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy-agent</artifactId>
-        <version>1.14.16</version>
+        <version>${net.byte-buddy.version}</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.14.16</version>
+        <version>${net.byte-buddy.version}</version>
       </dependency>
 
       <!-- Web server. -->
