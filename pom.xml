@@ -39,7 +39,7 @@
     <helidon.version>4.1.6</helidon.version>
     <jqwik.version>1.9.2</jqwik.version>
     <junit.version>5.11.4</junit.version>
-    <net.byte-buddy.version>1.15.11</net.byte-buddy.version>
+    <net.byte-buddy.version>1.16.0</net.byte-buddy.version>
   </properties>
 
   <licenses>
