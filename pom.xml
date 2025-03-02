@@ -36,7 +36,7 @@
     <com.io7m.xstructural.version>1.8.0</com.io7m.xstructural.version>
 
     <!-- Third-party dependencies. -->
-    <helidon.version>4.1.6</helidon.version>
+    <helidon.version>4.1.7</helidon.version>
     <jqwik.version>1.9.2</jqwik.version>
     <junit.version>5.11.4</junit.version>
     <net.byte-buddy.version>1.17.0</net.byte-buddy.version>
