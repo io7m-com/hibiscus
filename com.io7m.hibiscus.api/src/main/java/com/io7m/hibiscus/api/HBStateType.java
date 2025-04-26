@@ -83,6 +83,8 @@ public sealed interface HBStateType
   {
     /**
      * The client is connecting to the server.
+     *
+     * @param credentials The credentials
      */
 
     public HBStateConnecting
@@ -114,6 +116,8 @@ public sealed interface HBStateType
   {
     /**
      * The client successfully authenticated with the server.
+     *
+     * @param response The response
      */
 
     public HBStateConnectionSucceeded
@@ -148,6 +152,9 @@ public sealed interface HBStateType
   {
     /**
      * The client failed to authenticate with the server.
+     *
+     * @param exception The exception, if any
+     * @param response The response, if any
      */
 
     public HBStateConnectionFailed
