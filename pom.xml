@@ -37,7 +37,7 @@
 
     <!-- Third-party dependencies. -->
     <helidon.version>4.2.4</helidon.version>
-    <jqwik.version>1.9.2</jqwik.version>
+    <jqwik.version>1.9.3</jqwik.version>
     <junit.version>5.13.4</junit.version>
     <net.byte-buddy.version>1.17.7</net.byte-buddy.version>
   </properties>
